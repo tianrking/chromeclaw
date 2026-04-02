@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ChromeClaw Agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agentic browser copilot that can inspect the full current page and execute safe web actions.",
   "permissions": [
     "storage",

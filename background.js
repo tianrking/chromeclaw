@@ -7,6 +7,8 @@ import {
   evaluateWatchersForTabUpdate
 } from './core/watcher-engine.js';
 
+console.info('[ChromeClaw] background booted, build=0.1.1, rev=527cb3e');
+
 function normalizeHost(raw) {
   if (!raw || typeof raw !== 'string') return '';
   return raw.trim().toLowerCase();
