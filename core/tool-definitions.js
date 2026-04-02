@@ -3,8 +3,14 @@ export const TOOL_DEFS = [
     type: 'function',
     function: {
       name: 'page.get_snapshot',
-      description: 'Get a comprehensive structured snapshot of current page.',
-      parameters: { type: 'object', properties: {}, additionalProperties: false }
+      description: 'Get a structured snapshot of current page. Use profile=fast for lower latency.',
+      parameters: {
+        type: 'object',
+        properties: {
+          profile: { type: 'string', enum: ['fast', 'full'] }
+        },
+        additionalProperties: false
+      }
     }
   },
   {

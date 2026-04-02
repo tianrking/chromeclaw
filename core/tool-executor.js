@@ -57,7 +57,7 @@ export async function executeWithStrategy({
   }
 
   if (NAVIGATION_TOOLS.has(toolName) && workingTabId) {
-    await deps.waitForTabLoad(workingTabId, 15000);
+    await deps.waitForTabLoad(workingTabId, 5000);
     await deps.ensureContentScript(workingTabId);
     result = { ...result, autoRecoveredAfterNavigation: true, activeTabId: workingTabId };
   }

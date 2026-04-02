@@ -386,6 +386,32 @@ if (chatFeedEl && !chatFeedEl.children.length) {
   });
 }
 
-setInterval(loadApprovals, 1500);
+let approvalPollTimer = null;
+
+function startApprovalPolling() {
+  if (approvalPollTimer) return;
+  approvalPollTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      loadApprovals();
+    }
+  }, 4000);
+}
+
+function stopApprovalPolling() {
+  if (!approvalPollTimer) return;
+  clearInterval(approvalPollTimer);
+  approvalPollTimer = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    loadApprovals();
+    startApprovalPolling();
+  } else {
+    stopApprovalPolling();
+  }
+});
+
 loadApprovals();
 bootstrapState();
+startApprovalPolling();

@@ -34,7 +34,9 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
   await ensureContentScript(workingTabId);
 
   const provider = createProvider(settings);
-  const initialSnapshot = await callPageTool(workingTabId, 'page.get_snapshot', {});
+  const initialSnapshot = await callPageTool(workingTabId, 'page.get_snapshot', {
+    profile: 'fast'
+  });
   const snapshot = initialSnapshot?.snapshot || {};
 
   const strategy = resolveStrategy(snapshot.url || '');

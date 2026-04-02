@@ -153,16 +153,29 @@
       }));
   }
 
-  function getSnapshot() {
+  function getSnapshot({ profile = 'full' } = {}) {
+    const fast = String(profile || 'full').toLowerCase() === 'fast';
+    const headingLimit = fast ? 36 : 80;
+    const paragraphLimit = fast ? 70 : 160;
+    const linkLimit = fast ? 60 : 160;
+    const imageLimit = fast ? 40 : 80;
+    const formLimit = fast ? 14 : 30;
+    const buttonLimit = fast ? 36 : 80;
+    const tableLimit = fast ? 8 : 20;
+    const iframeLimit = fast ? 8 : 20;
+    const accessibilityLimit = fast ? 48 : 120;
+    const scriptLimit = fast ? 24 : 60;
+    const resourceLimit = fast ? 24 : 60;
+
     const selectedText = String(window.getSelection() || '').slice(0, 10000);
     const paragraphs = D.safeQueryAll('p,article li,main li')
-      .slice(0, 160)
+      .slice(0, paragraphLimit)
       .map((el) => D.textOf(el))
       .filter(Boolean);
 
     const resourceHints = performance
       .getEntriesByType('resource')
-      .slice(-60)
+      .slice(-resourceLimit)
       .map((entry) => ({
         name: entry.name,
         initiatorType: entry.initiatorType,
@@ -182,16 +195,16 @@
         scrollY: Math.round(window.scrollY)
       },
       selectedText,
-      headings: listHeadings(80),
+      headings: listHeadings(headingLimit),
       paragraphs,
-      links: listLinks(160),
-      images: listImages(80),
-      forms: listForms(30),
-      buttons: listButtons(80),
-      tables: listTables(20),
-      iframes: listIframes(20),
-      accessibility: getAccessibilityOutline(120),
-      scripts: listScripts(60),
+      links: listLinks(linkLimit),
+      images: listImages(imageLimit),
+      forms: listForms(formLimit),
+      buttons: listButtons(buttonLimit),
+      tables: listTables(tableLimit),
+      iframes: listIframes(iframeLimit),
+      accessibility: getAccessibilityOutline(accessibilityLimit),
+      scripts: listScripts(scriptLimit),
       resourceHints,
       stats: {
         domNodes: document.getElementsByTagName('*').length,
@@ -209,7 +222,8 @@
         hookEvents: Array.isArray(window.__chromeclawRuntime?.hooks)
           ? window.__chromeclawRuntime.hooks.slice(-8)
           : []
-      }
+      },
+      profile: fast ? 'fast' : 'full'
     };
   }
 
@@ -424,7 +438,7 @@
     return { ok: true, text: truncate(D.textOf(document.body), Number(maxChars) || 120000) };
   }
 
-  registry.register('page.get_snapshot', () => ({ ok: true, snapshot: getSnapshot() }));
+  registry.register('page.get_snapshot', (args) => ({ ok: true, snapshot: getSnapshot(args) }));
   registry.register('page.get_page_context', getPageContext);
   registry.register('page.get_html', getHtml);
   registry.register('page.get_text', getText);

@@ -25,8 +25,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "ChromeClaw Agent",
-    "default_popup": "popup.html"
+    "default_title": "ChromeClaw Agent"
   },
   "side_panel": {
     "default_path": "sidepanel.html"
