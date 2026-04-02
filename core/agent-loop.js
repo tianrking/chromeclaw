@@ -2,10 +2,23 @@ import { TOOL_DEFS } from './tool-definitions.js';
 import { browserTool, callPageTool, ensureContentScript, getActiveTab } from './tab-api.js';
 import { buildInitialMessages, buildSystemPrompt } from './prompt-builder.js';
 import { enforceToolPolicies, resolvePolicies } from './policy-guard.js';
-import { safeJsonParse } from './shared-utils.js';
+import { safeJsonParse, truncate } from './shared-utils.js';
 import { executeWithStrategy } from './tool-executor.js';
 import { createProvider } from '../providers/registry.js';
 import { resolveStrategy, strategyContext } from '../strategies/registry.js';
+
+function hostFromUrl(rawUrl) {
+  try {
+    return new URL(rawUrl).host.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function previewArgs(args) {
+  const json = safeJsonParse(JSON.stringify(args), {});
+  return truncate(JSON.stringify(json), 260);
+}
 
 export async function runAgent({ goal, settings, tabId, requestApproval }) {
   const activeTab = tabId ? { id: tabId } : await getActiveTab();
@@ -20,6 +33,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
   const strategy = resolveStrategy(snapshot.url || '');
   const siteStrategyCtx = strategyContext(strategy, { goal, snapshot });
   const policies = resolvePolicies(settings);
+  const siteHost = hostFromUrl(snapshot.url || '');
 
   const messages = buildInitialMessages({
     goal,
@@ -30,6 +44,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
     settings
   });
   const trace = [];
+  const toolEvents = [];
 
   if (provider.name === 'local_heuristic') {
     const local = await provider.complete({ goal, snapshot });
@@ -37,6 +52,10 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
       mode: 'local',
       answer: local.content || '(empty)',
       trace: ['Local heuristic provider used.'],
+      toolEvents,
+      strategy: siteStrategyCtx.name,
+      policy: policies,
+      siteHost,
       snapshotStats: snapshot.stats || {}
     };
   }
@@ -78,7 +97,9 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
         turn,
         strategyName: siteStrategyCtx.name,
         policies,
-        requestApproval
+        requestApproval,
+        siteHost,
+        settings
       });
 
       if (guard.blocked) {
@@ -88,12 +109,22 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           content: JSON.stringify(guard.result)
         });
         trace.push(guard.trace || `Blocked: ${toolName}`);
+        toolEvents.push({
+          turn,
+          toolName,
+          status: 'blocked',
+          strategy: siteStrategyCtx.name,
+          siteHost,
+          argsPreview: previewArgs(strategyArgs),
+          reason: guard.result?.reason || 'blocked'
+        });
         continue;
       }
 
       strategyArgs = guard.finalArgs;
 
       try {
+        const start = Date.now();
         const result = await executeWithStrategy({
           toolName,
           args: strategyArgs,
@@ -104,6 +135,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           settings,
           deps: { browserTool, callPageTool }
         });
+        const elapsedMs = Date.now() - start;
 
         messages.push({
           role: 'tool',
@@ -111,6 +143,16 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           content: JSON.stringify(result)
         });
         trace.push(`Executed: ${toolName}`);
+        toolEvents.push({
+          turn,
+          toolName,
+          status: result?.ok === false ? 'error' : 'ok',
+          strategy: siteStrategyCtx.name,
+          siteHost,
+          elapsedMs,
+          argsPreview: previewArgs(strategyArgs),
+          reason: guard.bypassReason || 'executed'
+        });
       } catch (error) {
         const toolErr = { ok: false, error: String(error), toolName };
         messages.push({
@@ -119,6 +161,15 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           content: JSON.stringify(toolErr)
         });
         trace.push(`Error: ${toolName} -> ${String(error)}`);
+        toolEvents.push({
+          turn,
+          toolName,
+          status: 'error',
+          strategy: siteStrategyCtx.name,
+          siteHost,
+          argsPreview: previewArgs(strategyArgs),
+          reason: String(error)
+        });
       }
     }
   }
@@ -129,6 +180,10 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
     mode: 'cloud',
     answer: finalText,
     trace,
+    toolEvents,
+    strategy: siteStrategyCtx.name,
+    policy: policies,
+    siteHost,
     snapshotStats: snapshot.stats || {}
   };
 }

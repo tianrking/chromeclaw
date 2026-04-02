@@ -12,7 +12,8 @@ export const DEFAULT_SETTINGS = {
   mutationPolicy: 'auto',
   highRiskPolicy: 'confirm',
   autoExecute: true,
-  maxSnapshotChars: 180000
+  maxSnapshotChars: 180000,
+  siteAutoAllow: {}
 };
 
 export const MUTATION_TOOLS = new Set([

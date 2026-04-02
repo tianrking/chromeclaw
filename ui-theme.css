@@ -1,0 +1,64 @@
+:root {
+  --bg: #f4f7fb;
+  --bg-soft: #eef3fa;
+  --panel: #ffffff;
+  --panel-elevated: #fbfdff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --line: #d8e2ef;
+  --brand: #0284c7;
+  --brand-strong: #0369a1;
+  --ok: #15803d;
+  --warn: #b45309;
+  --danger: #b91c1c;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.08);
+  --shadow-card: 0 4px 14px rgba(15, 23, 42, 0.06);
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 14px;
+  --space-4: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #0ea5e9, var(--brand-strong));
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 200ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.25);
+}
+
+button:disabled {
+  opacity: 0.62;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+button.ghost {
+  background: #e7eef8;
+  color: #1e293b;
+}
+
+button.ghost:hover {
+  box-shadow: 0 6px 12px rgba(100, 116, 139, 0.22);
+}
+
+.hidden {
+  display: none;
+}

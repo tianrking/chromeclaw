@@ -21,6 +21,7 @@ export function listPendingApprovals() {
     args: item.args,
     turn: item.turn,
     strategy: item.strategy,
+    siteHost: item.siteHost || '',
     riskLevel: item.riskLevel || 'normal',
     timeoutMs: item.timeoutMs
   }));
@@ -43,6 +44,7 @@ export function requestApproval(payload, timeoutMs = 120000) {
       args: payload.args,
       turn: payload.turn,
       strategy: payload.strategy,
+      siteHost: payload.siteHost || '',
       riskLevel: payload.riskLevel || 'normal',
       timeoutMs,
       resolve,

@@ -2,6 +2,11 @@ import { runAgent } from './core/agent-loop.js';
 import { listPendingApprovals, requestApproval, resolveApproval } from './core/approval-manager.js';
 import { getSettings, saveSettings } from './core/storage.js';
 
+function normalizeHost(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.trim().toLowerCase();
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   await getSettings();
   try {
@@ -51,6 +56,40 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === 'chromeclaw.save_settings') {
     saveSettings(message.payload || {})
+      .then((settings) => sendResponse({ ok: true, settings }))
+      .catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
+  if (message.type === 'chromeclaw.allow_tool_for_site') {
+    (async () => {
+      const host = normalizeHost(String(message.host || ''));
+      const toolName = String(message.toolName || '');
+      if (!host || !toolName) {
+        throw new Error('host and toolName are required');
+      }
+
+      const settings = await getSettings();
+      const currentRules = settings.siteAutoAllow && typeof settings.siteAutoAllow === 'object'
+        ? settings.siteAutoAllow
+        : {};
+
+      const existing = Array.isArray(currentRules[host]) ? currentRules[host] : [];
+      if (!existing.includes(toolName)) {
+        existing.push(toolName);
+      }
+
+      const next = {
+        ...settings,
+        siteAutoAllow: {
+          ...currentRules,
+          [host]: existing
+        }
+      };
+
+      await saveSettings(next);
+      return next;
+    })()
       .then((settings) => sendResponse({ ok: true, settings }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;

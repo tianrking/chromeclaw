@@ -6,13 +6,32 @@ export function resolvePolicies(settings) {
   return { mutationPolicy, highRiskPolicy };
 }
 
+function normalizeHost(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.trim().toLowerCase();
+}
+
+function isToolAutoAllowedForSite({ toolName, siteHost, settings }) {
+  const host = normalizeHost(siteHost);
+  if (!host) return false;
+
+  const rules = settings?.siteAutoAllow;
+  if (!rules || typeof rules !== 'object') return false;
+
+  const hostRules = rules[host];
+  if (!Array.isArray(hostRules)) return false;
+  return hostRules.includes(toolName);
+}
+
 export async function enforceToolPolicies({
   toolName,
   args,
   turn,
   strategyName,
   policies,
-  requestApproval
+  requestApproval,
+  siteHost,
+  settings
 }) {
   const isMutation = MUTATION_TOOLS.has(toolName);
   const isHighRisk = HIGH_RISK_TOOLS.has(toolName);
@@ -32,10 +51,15 @@ export async function enforceToolPolicies({
     };
   }
 
-  const needsApproveForMutation = isMutation && mutationPolicy === 'confirm';
-  const needsApproveForRisk = isHighRisk && highRiskPolicy === 'confirm';
+  const autoAllowedBySite = isToolAutoAllowedForSite({ toolName, siteHost, settings });
+  const needsApproveForMutation = isMutation && mutationPolicy === 'confirm' && !autoAllowedBySite;
+  const needsApproveForRisk = isHighRisk && highRiskPolicy === 'confirm' && !autoAllowedBySite;
   if (!needsApproveForMutation && !needsApproveForRisk) {
-    return { blocked: false, finalArgs: args };
+    return {
+      blocked: false,
+      finalArgs: args,
+      bypassReason: autoAllowedBySite ? 'site_auto_allow' : 'policy_auto'
+    };
   }
 
   if (typeof requestApproval !== 'function') {
@@ -57,7 +81,8 @@ export async function enforceToolPolicies({
     args,
     turn,
     strategy: strategyName,
-    riskLevel: isHighRisk ? 'high' : 'normal'
+    riskLevel: isHighRisk ? 'high' : 'normal',
+    siteHost
   });
 
   if (!approval?.approved) {
@@ -76,6 +101,7 @@ export async function enforceToolPolicies({
 
   return {
     blocked: false,
-    finalArgs: approval?.patchedArgs && typeof approval.patchedArgs === 'object' ? approval.patchedArgs : args
+    finalArgs: approval?.patchedArgs && typeof approval.patchedArgs === 'object' ? approval.patchedArgs : args,
+    bypassReason: 'user_approved'
   };
 }
