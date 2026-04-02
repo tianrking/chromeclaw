@@ -26,7 +26,7 @@ function previewArgs(args) {
   return truncate(JSON.stringify(json), 260);
 }
 
-export async function runAgent({ goal, settings, tabId, requestApproval }) {
+export async function runAgent({ goal, settings, tabId, requestApproval, onEvent }) {
   const activeTab = tabId ? { id: tabId } : await getActiveTab();
   if (!activeTab?.id) throw new Error('No active tab available');
   let workingTabId = activeTab.id;
@@ -43,6 +43,12 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
   const siteStrategyCtx = strategyContext(strategy, { goal, snapshot });
   const policies = resolvePolicies(settings);
   const siteHost = hostFromUrl(snapshot.url || '');
+  onEvent?.({
+    phase: 'start',
+    tabId: workingTabId,
+    strategy: siteStrategyCtx.name,
+    siteHost
+  });
 
   const messages = buildInitialMessages({
     goal,
@@ -57,6 +63,11 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
 
   if (provider.name === 'local_heuristic') {
     const local = await provider.complete({ goal, snapshot });
+    onEvent?.({
+      phase: 'complete',
+      mode: 'local',
+      answerPreview: truncate(local.content || '(empty)', 160)
+    });
     return {
       mode: 'local',
       answer: local.content || '(empty)',
@@ -73,6 +84,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
   const maxTurns = Math.max(1, Math.min(12, Number(settings.maxTurns) || 8));
 
   for (let turn = 0; turn < maxTurns; turn += 1) {
+    onEvent?.({ phase: 'turn', turn });
     const assistant = await provider.complete({
       messages,
       tools: TOOL_DEFS,
@@ -99,6 +111,12 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
 
       const rawArgs = safeJsonParse(call?.function?.arguments, {});
       let strategyArgs = strategy.enhanceToolArgs(toolName, rawArgs, { goal, snapshot });
+      onEvent?.({
+        phase: 'tool_start',
+        turn,
+        toolName,
+        argsPreview: previewArgs(strategyArgs)
+      });
 
       const guard = await enforceToolPolicies({
         toolName,
@@ -125,6 +143,12 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           strategy: siteStrategyCtx.name,
           siteHost,
           argsPreview: previewArgs(strategyArgs),
+          reason: guard.result?.reason || 'blocked'
+        });
+        onEvent?.({
+          phase: 'tool_blocked',
+          turn,
+          toolName,
           reason: guard.result?.reason || 'blocked'
         });
         continue;
@@ -165,6 +189,13 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           argsPreview: previewArgs(strategyArgs),
           reason: guard.bypassReason || 'executed'
         });
+        onEvent?.({
+          phase: 'tool_done',
+          turn,
+          toolName,
+          elapsedMs,
+          status: result?.ok === false ? 'error' : 'ok'
+        });
       } catch (error) {
         const toolErr = { ok: false, error: String(error), toolName };
         messages.push({
@@ -182,12 +213,23 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
           argsPreview: previewArgs(strategyArgs),
           reason: String(error)
         });
+        onEvent?.({
+          phase: 'tool_error',
+          turn,
+          toolName,
+          error: String(error)
+        });
       }
     }
   }
 
   if (!finalText) finalText = 'Agent reached max turns. Refine goal or raise maxTurns.';
 
+  onEvent?.({
+    phase: 'complete',
+    mode: 'cloud',
+    answerPreview: truncate(finalText, 160)
+  });
   return {
     mode: 'cloud',
     answer: finalText,

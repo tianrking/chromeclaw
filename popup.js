@@ -10,6 +10,8 @@ const stateModeEl = document.getElementById('stateMode');
 const stateStrategyEl = document.getElementById('stateStrategy');
 const stateApprovalEl = document.getElementById('stateApproval');
 const stateTaskEl = document.getElementById('stateTask');
+let activeRunId = '';
+let activeTypingNode = null;
 
 function setStatus(text) {
   if (statusEl) statusEl.textContent = text;
@@ -69,7 +71,10 @@ function createMessageNode({ role, title, text, typing = false }) {
     const label = document.createElement('span');
     label.className = 'typing-label';
     label.textContent = text || 'Executing plan';
-    bubble.append(label, dots);
+    const live = document.createElement('div');
+    live.className = 'typing-live';
+    live.textContent = '';
+    bubble.append(label, dots, live);
   } else {
     bubble.textContent = text || '(empty)';
   }
@@ -84,6 +89,21 @@ function appendMessage({ role, title, text, typing = false }) {
   chatFeedEl.appendChild(node.wrap);
   scrollChatToBottom();
   return node.wrap;
+}
+
+function appendTraceLine(line) {
+  if (!traceEl) return;
+  const next = `${nowLabel()}  ${line}`;
+  traceEl.textContent = traceEl.textContent ? `${traceEl.textContent}\n${next}` : next;
+  traceEl.scrollTop = traceEl.scrollHeight;
+}
+
+function setTypingProgress(text, live = '') {
+  if (!activeTypingNode) return;
+  const label = activeTypingNode.querySelector('.typing-label');
+  const liveEl = activeTypingNode.querySelector('.typing-live');
+  if (label) label.textContent = text || 'Executing plan';
+  if (liveEl) liveEl.textContent = live || '';
 }
 
 function normalizeStatus(status) {
@@ -191,8 +211,11 @@ async function runAgent() {
 
   setStatus('Running...');
   updateGlobalState({ task: `Running: ${goal}` });
+  const clientRunId = `run-ui-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  activeRunId = clientRunId;
   if (resultEl) resultEl.textContent = '';
   if (traceEl) traceEl.textContent = '';
+  appendTraceLine('Run started');
   runBtn.disabled = true;
 
   const typingMsg = appendMessage({
@@ -201,12 +224,15 @@ async function runAgent() {
     text: 'Executing plan',
     typing: true
   });
+  activeTypingNode = typingMsg;
+  setTypingProgress('Executing plan', 'Waiting for first tool call...');
 
   try {
     const response = await chrome.runtime.sendMessage({
       type: 'chromeclaw.run_agent',
       tabId,
-      goal
+      goal,
+      clientRunId
     });
 
     if (!response?.ok) {
@@ -216,9 +242,16 @@ async function runAgent() {
     const result = response.result || {};
     const answer = result.answer || '(empty)';
     if (resultEl) resultEl.textContent = answer;
-    if (traceEl) traceEl.textContent = (result.trace || []).join('\n') || '(none)';
+    if (traceEl) {
+      const finalTrace = (result.trace || []).join('\n') || '(none)';
+      traceEl.textContent = traceEl.textContent
+        ? `${traceEl.textContent}\n----- final -----\n${finalTrace}`
+        : finalTrace;
+    }
 
     if (typingMsg?.parentNode) typingMsg.remove();
+    activeTypingNode = null;
+    activeRunId = '';
     const doneMsg = appendMessage({ role: 'assistant', title: 'ChromeClaw', text: answer });
     if (doneMsg) renderToolCards(doneMsg, result.toolEvents || []);
 
@@ -235,6 +268,8 @@ async function runAgent() {
     const msg = String(err);
     if (resultEl) resultEl.textContent = msg;
     if (typingMsg?.parentNode) typingMsg.remove();
+    activeTypingNode = null;
+    activeRunId = '';
     appendMessage({ role: 'system', title: 'Error', text: msg });
     updateGlobalState({ task: `Failed: ${goal}` });
     setStatus('Error');
@@ -375,7 +410,50 @@ if (goalEl) {
 if (openOptionsBtn) openOptionsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message?.type === 'chromeclaw.approval_updated') loadApprovals();
+  if (message?.type === 'chromeclaw.approval_updated') {
+    loadApprovals();
+    return;
+  }
+  if (message?.type !== 'chromeclaw.agent_event') return;
+  if (!activeRunId) return;
+  if (String(message.runId || '') !== String(activeRunId)) return;
+
+  const event = message.event || {};
+  const phase = String(event.phase || '');
+  if (phase === 'start') {
+    appendTraceLine(`start strategy=${event.strategy || 'generic'} host=${event.siteHost || '-'}`);
+    return;
+  }
+  if (phase === 'turn') {
+    appendTraceLine(`turn ${event.turn}`);
+    return;
+  }
+  if (phase === 'tool_start') {
+    const text = `Running ${event.toolName}...`;
+    setTypingProgress(text, `turn ${event.turn ?? '-'} · ${event.toolName}`);
+    updateGlobalState({ task: text });
+    appendTraceLine(`tool_start ${event.toolName} turn=${event.turn ?? '-'}`);
+    return;
+  }
+  if (phase === 'tool_done') {
+    appendTraceLine(
+      `tool_done ${event.toolName} turn=${event.turn ?? '-'} status=${event.status || 'ok'} ${event.elapsedMs || 0}ms`
+    );
+    return;
+  }
+  if (phase === 'tool_blocked') {
+    appendTraceLine(`tool_blocked ${event.toolName} reason=${event.reason || 'blocked'}`);
+    setTypingProgress(`Blocked on ${event.toolName}`, event.reason || 'approval/policy');
+    return;
+  }
+  if (phase === 'tool_error') {
+    appendTraceLine(`tool_error ${event.toolName} ${event.error || ''}`);
+    setTypingProgress(`Error in ${event.toolName}`, truncateText(event.error || '', 80));
+    return;
+  }
+  if (phase === 'complete') {
+    appendTraceLine(`complete mode=${event.mode || 'cloud'}`);
+  }
 });
 
 if (chatFeedEl && !chatFeedEl.children.length) {

@@ -133,6 +133,12 @@ h2 {
   margin-right: 8px;
 }
 
+.typing-live {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #475569;
+}
+
 .typing-dots {
   display: inline-flex;
   align-items: center;

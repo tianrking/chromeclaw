@@ -75,13 +75,30 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'chromeclaw.run_agent') {
     (async () => {
       const settings = await getSettings();
+      const runId =
+        String(message.clientRunId || '').trim() ||
+        `run-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const emitEvent = (event) => {
+        try {
+          chrome.runtime.sendMessage({
+            type: 'chromeclaw.agent_event',
+            runId,
+            event,
+            at: Date.now()
+          });
+        } catch {
+          // UI may not be open
+        }
+      };
+
       const result = await runAgent({
         goal: String(message.goal || ''),
         settings,
         tabId: message.tabId,
-        requestApproval
+        requestApproval,
+        onEvent: emitEvent
       });
-      return result;
+      return { runId, ...result };
     })()
       .then((result) => sendResponse({ ok: true, result }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
