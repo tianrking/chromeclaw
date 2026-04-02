@@ -62,6 +62,30 @@ export async function executeWithStrategy({
     result = { ...result, autoRecoveredAfterNavigation: true, activeTabId: workingTabId };
   }
 
+  if (toolName === 'page.wait_for' && result?.ok === false) {
+    const firstTimeoutMs = Math.max(1000, Number(args?.timeoutMs) || 5000);
+    const retryTimeoutMs = Math.min(20000, Math.max(8000, firstTimeoutMs * 2));
+    const retryArgs = { ...(args || {}), timeoutMs: retryTimeoutMs };
+    const retryResult = await executeToolNamespace(workingTabId, toolName, retryArgs, deps);
+    if (retryResult?.ok) {
+      result = {
+        ...retryResult,
+        retried: true,
+        firstError: result?.error || null,
+        firstTimeoutMs,
+        retryTimeoutMs
+      };
+    } else {
+      result = {
+        ...retryResult,
+        retried: true,
+        firstError: result?.error || null,
+        firstTimeoutMs,
+        retryTimeoutMs
+      };
+    }
+  }
+
   if (MUTATION_TOOLS.has(toolName) && result?.ok === false) {
     const fallbackArgs = strategy.fallbackToolArgs(toolName, args, result, { goal, snapshot });
     if (fallbackArgs && JSON.stringify(fallbackArgs) !== JSON.stringify(args)) {

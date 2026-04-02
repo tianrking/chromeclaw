@@ -7,19 +7,17 @@ const openOptionsBtn = document.getElementById('openOptions');
 const autoApproveToggleBtn = document.getElementById('autoApproveToggle');
 const newChatBtn = document.getElementById('newChat');
 const sessionSelectEl = document.getElementById('sessionSelect');
-const approvalsEl = document.getElementById('approvals');
-const approvalsPanelEl = document.querySelector('.approvals-panel');
 const chatFeedEl = document.getElementById('chatFeed');
 const stateModeEl = document.getElementById('stateMode');
 const stateStrategyEl = document.getElementById('stateStrategy');
 const stateApprovalEl = document.getElementById('stateApproval');
 const stateTaskEl = document.getElementById('stateTask');
-const approvalSummaryEl = document.getElementById('approvalSummary');
 let activeRunId = '';
 let activeTypingNode = null;
 let liveDraftLines = [];
 let approvalCountdownTimer = null;
 let autoApproveOn = false;
+const approvalCardMap = new Map();
 const CHAT_STORE_KEY = 'chromeclaw.chat.sessions.v1';
 const MAX_SESSION_MESSAGES = 200;
 let chatState = { activeId: '', sessions: [] };
@@ -441,15 +439,6 @@ async function getActiveTabContext() {
   return { tabId, host };
 }
 
-async function allowToolForSite({ host, toolName }) {
-  if (!host || !toolName) return;
-  await chrome.runtime.sendMessage({
-    type: 'chromeclaw.allow_tool_for_site',
-    host,
-    toolName
-  });
-}
-
 async function runAgent() {
   const goal = goalEl?.value.trim() || '';
   if (!goal) {
@@ -545,7 +534,7 @@ async function loadApprovals() {
   try {
     const response = await chrome.runtime.sendMessage({ type: 'chromeclaw.approval_list' });
     if (!response?.ok) return;
-    renderApprovals(response.items || []);
+    renderApprovalsInChat(response.items || []);
   } catch {
     // ignore
   }
@@ -560,41 +549,35 @@ async function decideApproval(id, approved) {
   await loadApprovals();
 }
 
-function renderApprovals(items) {
-  if (approvalSummaryEl) {
-    approvalSummaryEl.textContent = `Action Approval (${items.length})`;
-  }
-  if (approvalsPanelEl && items.length > 0) {
-    approvalsPanelEl.open = true;
-  }
+function renderApprovalsInChat(items) {
   refreshApprovalCountdown(items);
-  if (!approvalsEl) return;
-  approvalsEl.innerHTML = '';
-  if (!items.length) {
-    approvalsEl.textContent = 'No pending actions.';
-    return;
+  const alive = new Set(items.map((i) => String(i.id)));
+
+  for (const [id, node] of approvalCardMap.entries()) {
+    if (alive.has(id)) continue;
+    node.remove();
+    approvalCardMap.delete(id);
   }
 
   for (const item of items) {
-    const wrap = document.createElement('article');
-    wrap.className = 'approval-card';
+    const id = String(item.id || '');
+    if (!id || approvalCardMap.has(id)) continue;
 
-    const top = document.createElement('div');
-    top.className = 'approval-top';
+    const msgNode = appendMessage({
+      role: 'system',
+      title: 'Approval',
+      text: `Action needs confirmation: ${item.toolName}`,
+      persist: false
+    });
+    if (!msgNode) continue;
 
-    const title = document.createElement('div');
-    title.className = 'approval-tool';
-    title.textContent = item.toolName;
-
-    const badge = document.createElement('span');
-    badge.className = `risk-badge risk-${item.riskLevel || 'normal'}`;
-    badge.textContent = (item.riskLevel || 'normal').toUpperCase();
-
-    top.append(title, badge);
+    const bubble = msgNode.querySelector('.msg-bubble');
+    if (!bubble) continue;
+    bubble.classList.add('approval-inline');
 
     const meta = document.createElement('div');
     meta.className = 'approval-meta';
-    meta.textContent = `strategy=${item.strategy || 'generic'} · host=${item.siteHost || '-'} · turn=${item.turn ?? '-'}`;
+    meta.textContent = `turn=${item.turn ?? '-'} · risk=${item.riskLevel || 'normal'} · ${item.strategy || 'generic'} @ ${item.siteHost || '-'}`;
 
     const target = document.createElement('div');
     target.className = 'approval-target';
@@ -604,45 +587,38 @@ function renderApprovals(items) {
     scope.className = 'approval-scope';
     scope.textContent = `Impact: ${impactScope(item.toolName)}`;
 
-    const argsWrap = document.createElement('details');
-    argsWrap.className = 'approval-details';
-    const argsSummary = document.createElement('summary');
-    argsSummary.textContent = 'View arguments';
-    const args = document.createElement('pre');
-    args.className = 'approval-args';
-    args.textContent = JSON.stringify(item.args || {}, null, 2);
-    argsWrap.append(argsSummary, args);
-
     const actions = document.createElement('div');
-    actions.className = 'approval-actions';
+    actions.className = 'approval-inline-actions';
 
     const approve = document.createElement('button');
     approve.className = 'btn-approve';
-    approve.textContent = 'Approve';
-    approve.addEventListener('click', () => decideApproval(item.id, true));
+    approve.textContent = 'Allow';
+    approve.addEventListener('click', async () => {
+      await decideApproval(item.id, true);
+      appendMessage({
+        role: 'system',
+        title: 'Approval',
+        text: `Allowed: ${item.toolName}`,
+        persist: false
+      });
+    });
 
     const reject = document.createElement('button');
     reject.className = 'btn-reject';
     reject.textContent = 'Reject';
-    reject.addEventListener('click', () => decideApproval(item.id, false));
-
-    const allow = document.createElement('button');
-    allow.className = 'ghost';
-    allow.textContent = 'Always allow on this site';
-    allow.disabled = !item.siteHost;
-    allow.addEventListener('click', async () => {
-      await allowToolForSite({ host: item.siteHost, toolName: item.toolName });
+    reject.addEventListener('click', async () => {
+      await decideApproval(item.id, false);
       appendMessage({
         role: 'system',
-        title: 'Policy',
-        text: `Saved auto-allow rule: ${item.toolName} on ${item.siteHost}`
+        title: 'Approval',
+        text: `Rejected: ${item.toolName}`,
+        persist: false
       });
-      await decideApproval(item.id, true);
     });
 
-    actions.append(approve, reject, allow);
-    wrap.append(top, meta, target, scope, argsWrap, actions);
-    approvalsEl.appendChild(wrap);
+    actions.append(approve, reject);
+    bubble.append(meta, target, scope, actions);
+    approvalCardMap.set(id, msgNode);
   }
 }
 
