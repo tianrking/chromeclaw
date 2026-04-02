@@ -35,7 +35,6 @@ ChromeClaw 是一个工程化的 MV3 浏览器 Agent 插件，目标是“对任
 - `popup.*`: 插件弹窗 UI
 - `sidepanel.html` / `sidepanel.css`: 常驻 Side Panel UI（推荐入口）
 - `options.*`: 配置页 UI
-- `INSPIRATION_ANALYSIS.md`: 三项目迁移分析
 - `strategies/`
   - `registry.js`: 策略选择器（按站点分派）
   - `google.js` / `youtube.js` / `github.js` / `generic.js`
@@ -140,3 +139,16 @@ ChromeClaw 是一个工程化的 MV3 浏览器 Agent 插件，目标是“对任
 - 先关闭 `Auto Execute`，观察 Agent 规划质量
 - 对敏感网站使用专门浏览器 profile
 - 复杂流程先用 `page.query_elements + page.highlight` 校准定位再点击
+
+## 许可与商用
+
+本项目采用**源码可见许可（Source-Available）**：
+
+- 非商业用途：允许使用、修改与分发
+- 商业用途：需要购买商业授权
+- 二次开发与再分发：必须保留署名并明确引用原始来源
+
+请阅读：
+
+- `LICENSE`
+- `LICENSE-COMMERCIAL.md`

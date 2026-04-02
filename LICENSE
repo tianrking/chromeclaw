@@ -1,0 +1,40 @@
+ChromeClaw Source-Available License (CSAL) v1.0
+Copyright (c) 2026 tianrking
+
+1. Grant (Non-Commercial)
+You are permitted to use, copy, modify, and distribute this software and its source code for non-commercial purposes, subject to the conditions below.
+
+2. Commercial Use Requires Paid License
+Any commercial use requires prior written authorization and a paid commercial license from the copyright holder.
+Commercial use includes, but is not limited to:
+- Selling software or services based on this software
+- Using this software in paid products, SaaS, or enterprise/internal commercial workflows
+- Offering hosting, automation, or integration services for compensation
+
+For commercial licensing, contact: tian.r.king@gmail.com
+
+3. Attribution Required for Redistribution and Derivatives
+If you redistribute this software, modified versions, or derivative works (in source or binary form), you must:
+- Keep this license text intact
+- Clearly state that your work is based on ChromeClaw
+- Provide an explicit source attribution to the original project repository
+- Mark your modifications and dates of modification
+
+Suggested attribution text:
+"This project is based on ChromeClaw by tianrking. Original source: https://github.com/tianrking/chromeclaw"
+
+4. Prohibited Without Commercial License
+Without a commercial license, you may not:
+- Use this software for commercial purposes
+- Remove or falsify attribution information
+- Re-license this software in a way that conflicts with this license
+
+5. No Warranty
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY.
+
+6. Termination
+Any violation of this license terminates your rights under this license immediately.
+
+7. Governing Terms
+If a separate signed commercial agreement exists, that agreement prevails for commercial use.
