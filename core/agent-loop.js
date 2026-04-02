@@ -8,7 +8,7 @@ import {
 } from './tab-api.js';
 import { buildInitialMessages, buildSystemPrompt } from './prompt-builder.js';
 import { enforceToolPolicies, resolvePolicies } from './policy-guard.js';
-import { safeJsonParse, truncate } from './shared-utils.js';
+import { safeJsonParse, truncateString } from './shared-utils.js';
 import { executeWithStrategy } from './tool-executor.js';
 import { createProvider } from '../providers/registry.js';
 import { resolveStrategy, strategyContext } from '../strategies/registry.js';
@@ -23,7 +23,7 @@ function hostFromUrl(rawUrl) {
 
 function previewArgs(args) {
   const json = safeJsonParse(JSON.stringify(args), {});
-  return truncate(JSON.stringify(json), 260);
+  return truncateString(JSON.stringify(json), 260);
 }
 
 export async function runAgent({ goal, settings, tabId, requestApproval, onEvent }) {
@@ -66,7 +66,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval, onEvent
     onEvent?.({
       phase: 'complete',
       mode: 'local',
-      answerPreview: truncate(local.content || '(empty)', 160)
+      answerPreview: truncateString(local.content || '(empty)', 160)
     });
     return {
       mode: 'local',
@@ -228,7 +228,7 @@ export async function runAgent({ goal, settings, tabId, requestApproval, onEvent
   onEvent?.({
     phase: 'complete',
     mode: 'cloud',
-    answerPreview: truncate(finalText, 160)
+    answerPreview: truncateString(finalText, 160)
   });
   return {
     mode: 'cloud',
