@@ -5,6 +5,10 @@ const traceEl = document.getElementById('trace');
 const statusEl = document.getElementById('status');
 const openOptionsBtn = document.getElementById('openOptions');
 const autoApproveToggleBtn = document.getElementById('autoApproveToggle');
+const sessionSelectEl = document.getElementById('sessionSelect');
+const newSessionBtn = document.getElementById('newSession');
+const deleteSessionBtn = document.getElementById('deleteSession');
+const clearSessionBtn = document.getElementById('clearSession');
 const approvalsEl = document.getElementById('approvals');
 const approvalsPanelEl = document.querySelector('.approvals-panel');
 const chatFeedEl = document.getElementById('chatFeed');
@@ -18,6 +22,10 @@ let activeTypingNode = null;
 let liveDraftLines = [];
 let approvalCountdownTimer = null;
 let autoApproveOn = false;
+const CHAT_STORE_KEY = 'chromeclaw.chat.sessions.v1';
+const MAX_SESSION_MESSAGES = 200;
+let chatState = { activeId: '', sessions: [] };
+let persistTimer = null;
 
 function setStatus(text) {
   if (statusEl) statusEl.textContent = truncateText(text, 28);
@@ -26,6 +34,163 @@ function setStatus(text) {
 function truncateText(text, max = 140) {
   const raw = String(text || '');
   return raw.length > max ? `${raw.slice(0, max - 1)}…` : raw;
+}
+
+function makeSessionId() {
+  return `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function defaultSessionName() {
+  return `Session ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+function createEmptySession(name = defaultSessionName()) {
+  return {
+    id: makeSessionId(),
+    name,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    messages: []
+  };
+}
+
+function schedulePersistChatState() {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    chrome.storage.local.set({ [CHAT_STORE_KEY]: chatState }).catch(() => {});
+  }, 120);
+}
+
+function currentSession() {
+  return chatState.sessions.find((s) => s.id === chatState.activeId) || null;
+}
+
+function ensureChatState() {
+  if (!Array.isArray(chatState.sessions) || !chatState.sessions.length) {
+    const session = createEmptySession();
+    chatState = { activeId: session.id, sessions: [session] };
+  }
+  if (!chatState.activeId || !chatState.sessions.some((s) => s.id === chatState.activeId)) {
+    chatState.activeId = chatState.sessions[0].id;
+  }
+}
+
+function sessionLabel(session) {
+  const latest = session.messages?.[session.messages.length - 1];
+  if (latest?.role === 'user' && latest.text) return truncateText(latest.text, 42);
+  if (session.name) return truncateText(session.name, 42);
+  return 'Session';
+}
+
+function renderSessionOptions() {
+  if (!sessionSelectEl) return;
+  sessionSelectEl.innerHTML = '';
+  for (const session of chatState.sessions) {
+    const opt = document.createElement('option');
+    opt.value = session.id;
+    opt.textContent = sessionLabel(session);
+    if (session.id === chatState.activeId) opt.selected = true;
+    sessionSelectEl.appendChild(opt);
+  }
+}
+
+function appendMessageToState(msg) {
+  const session = currentSession();
+  if (!session) return;
+  session.messages.push(msg);
+  if (session.messages.length > MAX_SESSION_MESSAGES) {
+    session.messages = session.messages.slice(-MAX_SESSION_MESSAGES);
+  }
+  if (msg.role === 'user' && msg.text) {
+    session.name = truncateText(msg.text, 36);
+  }
+  session.updatedAt = new Date().toISOString();
+  renderSessionOptions();
+  schedulePersistChatState();
+}
+
+function renderMessagesFromState() {
+  if (!chatFeedEl) return;
+  chatFeedEl.innerHTML = '';
+  const session = currentSession();
+  if (!session || !Array.isArray(session.messages) || !session.messages.length) {
+    appendMessage({
+      role: 'system',
+      title: 'System',
+      text: 'Chat ready. Start a task or ask to inspect this page.',
+      persist: true
+    });
+    return;
+  }
+  for (const msg of session.messages) {
+    appendMessage({
+      role: msg.role || 'system',
+      title: msg.title || 'System',
+      text: msg.text || '',
+      typing: false,
+      persist: false
+    });
+  }
+}
+
+async function loadChatState() {
+  try {
+    const saved = await chrome.storage.local.get(CHAT_STORE_KEY);
+    const data = saved?.[CHAT_STORE_KEY];
+    if (data && typeof data === 'object') {
+      chatState = {
+        activeId: data.activeId || '',
+        sessions: Array.isArray(data.sessions) ? data.sessions : []
+      };
+    }
+  } catch {
+    // ignore
+  }
+  ensureChatState();
+  renderSessionOptions();
+  renderMessagesFromState();
+  schedulePersistChatState();
+}
+
+function switchSession(id) {
+  if (!id) return;
+  if (!chatState.sessions.some((s) => s.id === id)) return;
+  chatState.activeId = id;
+  renderSessionOptions();
+  renderMessagesFromState();
+  schedulePersistChatState();
+}
+
+function createSessionAndSwitch() {
+  const session = createEmptySession();
+  chatState.sessions.unshift(session);
+  chatState.activeId = session.id;
+  renderSessionOptions();
+  renderMessagesFromState();
+  schedulePersistChatState();
+}
+
+function deleteCurrentSession() {
+  if (chatState.sessions.length <= 1) {
+    clearCurrentSessionMessages();
+    return;
+  }
+  const idx = chatState.sessions.findIndex((s) => s.id === chatState.activeId);
+  if (idx < 0) return;
+  chatState.sessions.splice(idx, 1);
+  chatState.activeId = chatState.sessions[Math.max(0, idx - 1)]?.id || chatState.sessions[0].id;
+  renderSessionOptions();
+  renderMessagesFromState();
+  schedulePersistChatState();
+}
+
+function clearCurrentSessionMessages() {
+  const session = currentSession();
+  if (!session) return;
+  session.messages = [];
+  session.updatedAt = new Date().toISOString();
+  renderMessagesFromState();
+  schedulePersistChatState();
 }
 
 function nowLabel() {
@@ -100,11 +265,18 @@ function createMessageNode({ role, title, text, typing = false }) {
   return { wrap, bubble };
 }
 
-function appendMessage({ role, title, text, typing = false }) {
+function appendMessage({ role, title, text, typing = false, persist = !typing }) {
   if (!chatFeedEl) return null;
   const node = createMessageNode({ role, title, text, typing });
   chatFeedEl.appendChild(node.wrap);
   scrollChatToBottom();
+  if (persist) {
+    appendMessageToState({
+      role: role || 'system',
+      title: title || 'System',
+      text: String(text || '')
+    });
+  }
   return node.wrap;
 }
 
@@ -532,6 +704,37 @@ if (autoApproveToggleBtn) {
     });
   });
 }
+if (sessionSelectEl) {
+  sessionSelectEl.addEventListener('change', () => switchSession(sessionSelectEl.value));
+}
+if (newSessionBtn) {
+  newSessionBtn.addEventListener('click', () => {
+    createSessionAndSwitch();
+    appendMessage({
+      role: 'system',
+      title: 'System',
+      text: 'New session created.',
+      persist: true
+    });
+  });
+}
+if (deleteSessionBtn) {
+  deleteSessionBtn.addEventListener('click', () => {
+    if (!confirm('Delete current session?')) return;
+    deleteCurrentSession();
+  });
+}
+if (clearSessionBtn) {
+  clearSessionBtn.addEventListener('click', () => {
+    clearCurrentSessionMessages();
+    appendMessage({
+      role: 'system',
+      title: 'System',
+      text: 'Current session cleared.',
+      persist: true
+    });
+  });
+}
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message?.type === 'chromeclaw.approval_updated') {
@@ -585,14 +788,6 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-if (chatFeedEl && !chatFeedEl.children.length) {
-  appendMessage({
-    role: 'system',
-    title: 'System',
-    text: 'Agent timeline ready. Run a task to see step cards and live status.'
-  });
-}
-
 let approvalPollTimer = null;
 
 function startApprovalPolling() {
@@ -621,4 +816,5 @@ document.addEventListener('visibilitychange', () => {
 
 loadApprovals();
 bootstrapState();
+loadChatState();
 startApprovalPolling();
