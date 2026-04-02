@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChromeClaw Options</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>ChromeClaw Agent Options</h1>
+    <p class="desc">Configure an OpenAI-compatible endpoint for cloud agent mode.</p>
+
+    <label>Provider
+      <select id="providerKind">
+        <option value="openai_compatible">OpenAI Compatible</option>
+        <option value="anthropic_compatible">Anthropic (Claude) Compatible</option>
+        <option value="zhipu_compatible">Zhipu (GLM) Compatible</option>
+        <option value="zai_coding_global">Z.AI Coding Plan (Global)</option>
+        <option value="zai_coding_cn">Z.AI Coding Plan (China)</option>
+      </select>
+    </label>
+
+    <label>Response Format
+      <select id="responseFormat">
+        <option value="default">Default</option>
+        <option value="coding_plan">Coding Plan</option>
+      </select>
+    </label>
+
+    <label>Base URL
+      <input id="baseUrl" type="text" placeholder="https://api.openai.com/v1" />
+    </label>
+
+    <label>API Key
+      <input id="apiKey" type="password" placeholder="sk-..." />
+    </label>
+
+    <label>Model
+      <input id="model" type="text" placeholder="gpt-4.1-mini" />
+    </label>
+
+    <label>Temperature
+      <input id="temperature" type="number" min="0" max="2" step="0.1" />
+    </label>
+
+    <label>Reasoning Effort
+      <select id="reasoningEffort">
+        <option value="off">Off</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+    </label>
+
+    <label>Max Turns
+      <input id="maxTurns" type="number" min="1" max="12" step="1" />
+    </label>
+
+    <label>Max Snapshot Chars
+      <input id="maxSnapshotChars" type="number" min="5000" max="400000" step="1000" />
+    </label>
+
+    <label>Mutation Policy
+      <select id="mutationPolicy">
+        <option value="auto">Auto Execute</option>
+        <option value="confirm">Confirm Each Action</option>
+        <option value="block">Block All Mutations</option>
+      </select>
+    </label>
+
+    <label>High-Risk Policy
+      <select id="highRiskPolicy">
+        <option value="confirm">Confirm High-Risk (Recommended)</option>
+        <option value="auto">Auto High-Risk</option>
+        <option value="block">Block High-Risk</option>
+      </select>
+    </label>
+
+    <label class="check">
+      <input id="autoExecute" type="checkbox" />
+      Enable mutation tool auto-execution (`click/type/scroll`)
+    </label>
+
+    <div class="actions">
+      <button id="save">Save</button>
+      <span id="status"></span>
+    </div>
+  </main>
+
+  <script src="options.js"></script>
+</body>
+</html>

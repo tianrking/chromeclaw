@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "ChromeClaw Agent",
+  "version": "0.1.0",
+  "description": "Agentic browser copilot that can inspect the full current page and execute safe web actions.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "cookies",
+    "downloads",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "ChromeClaw Agent",
+    "default_popup": "popup.html"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/hook-start.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/hook-end.js"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/dom-utils.js",
+        "content/page-bridge.js",
+        "content/tools/registry.js",
+        "content/tools/shared.js",
+        "content/scriptlet-engine.js",
+        "content/tools/inspection-tools.js",
+        "content/tools/action-tools.js",
+        "content/observability.js",
+        "content/tools/runtime-tools.js",
+        "content/websocket-tap.js",
+        "content/page-tools.js",
+        "content/entry.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

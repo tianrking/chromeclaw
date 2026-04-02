@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChromeClaw</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main class="chat-app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>ChromeClaw</h1>
+        <span id="status" class="status">Idle</span>
+      </div>
+      <button id="openOptions" class="ghost">Options</button>
+    </header>
+
+    <section id="chatFeed" class="chat-feed" aria-label="Conversation"></section>
+
+    <section class="panel approvals-panel">
+      <h2>Approval Queue</h2>
+      <div id="approvals" class="approvals"></div>
+    </section>
+
+    <details class="panel debug-panel">
+      <summary>Debug Trace</summary>
+      <pre id="trace"></pre>
+    </details>
+
+    <footer class="composer">
+      <textarea id="goal" rows="3" placeholder="Ask ChromeClaw to inspect or automate this page..."></textarea>
+      <div class="composer-actions">
+        <button id="run">Send</button>
+      </div>
+    </footer>
+
+    <pre id="result" class="hidden"></pre>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
