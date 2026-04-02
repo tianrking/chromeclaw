@@ -12,6 +12,7 @@ const stateApprovalEl = document.getElementById('stateApproval');
 const stateTaskEl = document.getElementById('stateTask');
 let activeRunId = '';
 let activeTypingNode = null;
+let liveDraftLines = [];
 
 function setStatus(text) {
   if (statusEl) statusEl.textContent = text;
@@ -104,6 +105,17 @@ function setTypingProgress(text, live = '') {
   const liveEl = activeTypingNode.querySelector('.typing-live');
   if (label) label.textContent = text || 'Executing plan';
   if (liveEl) liveEl.textContent = live || '';
+}
+
+function pushDraftLine(line) {
+  const content = truncateText(String(line || '').replace(/\s+/g, ' ').trim(), 220);
+  if (!content) return;
+  const last = liveDraftLines[liveDraftLines.length - 1] || '';
+  if (last === content) return;
+  liveDraftLines.push(content);
+  if (liveDraftLines.length > 5) liveDraftLines = liveDraftLines.slice(-5);
+  const merged = liveDraftLines.map((l, i) => `${i + 1}. ${l}`).join('\n');
+  setTypingProgress('Analyzing (live draft)...', merged);
 }
 
 function normalizeStatus(status) {
@@ -213,6 +225,7 @@ async function runAgent() {
   updateGlobalState({ task: `Running: ${goal}` });
   const clientRunId = `run-ui-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   activeRunId = clientRunId;
+  liveDraftLines = [];
   if (resultEl) resultEl.textContent = '';
   if (traceEl) traceEl.textContent = '';
   appendTraceLine('Run started');
@@ -252,6 +265,7 @@ async function runAgent() {
     if (typingMsg?.parentNode) typingMsg.remove();
     activeTypingNode = null;
     activeRunId = '';
+    liveDraftLines = [];
     const doneMsg = appendMessage({ role: 'assistant', title: 'ChromeClaw', text: answer });
     if (doneMsg) renderToolCards(doneMsg, result.toolEvents || []);
 
@@ -270,6 +284,7 @@ async function runAgent() {
     if (typingMsg?.parentNode) typingMsg.remove();
     activeTypingNode = null;
     activeRunId = '';
+    liveDraftLines = [];
     appendMessage({ role: 'system', title: 'Error', text: msg });
     updateGlobalState({ task: `Failed: ${goal}` });
     setStatus('Error');
@@ -426,6 +441,11 @@ chrome.runtime.onMessage.addListener((message) => {
   }
   if (phase === 'turn') {
     appendTraceLine(`turn ${event.turn}`);
+    return;
+  }
+  if (phase === 'assistant_draft') {
+    appendTraceLine(`assistant_draft turn=${event.turn ?? '-'}`);
+    pushDraftLine(event.contentPreview || '');
     return;
   }
   if (phase === 'tool_start') {

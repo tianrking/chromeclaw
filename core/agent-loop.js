@@ -100,6 +100,14 @@ export async function runAgent({ goal, settings, tabId, requestApproval, onEvent
       tool_calls: toolCalls
     });
 
+    if (assistant.content) {
+      onEvent?.({
+        phase: 'assistant_draft',
+        turn,
+        contentPreview: truncateString(assistant.content, 420)
+      });
+    }
+
     if (!toolCalls.length) {
       finalText = assistant.content || 'Done.';
       break;
