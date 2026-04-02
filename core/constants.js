@@ -16,6 +16,13 @@ export const DEFAULT_SETTINGS = {
   siteAutoAllow: {}
 };
 
+export const NAVIGATION_TOOLS = new Set([
+  'browser.open_url',
+  'browser.navigate_back',
+  'browser.navigate_forward',
+  'browser.reload_tab'
+]);
+
 export const MUTATION_TOOLS = new Set([
   'page.click',
   'page.keypress',
@@ -36,7 +43,11 @@ export const MUTATION_TOOLS = new Set([
   'browser.set_cookie',
   'browser.delete_cookie',
   'browser.dnr_set_rules',
-  'browser.dnr_clear_rules'
+  'browser.dnr_clear_rules',
+  'browser.watcher_create',
+  'browser.watcher_pause',
+  'browser.watcher_resume',
+  'browser.watcher_remove'
 ]);
 
 export const HIGH_RISK_TOOLS = new Set([
@@ -50,5 +61,7 @@ export const HIGH_RISK_TOOLS = new Set([
   'browser.dnr_set_rules',
   'browser.dnr_clear_rules',
   'browser.open_url',
-  'browser.close_tab'
+  'browser.close_tab',
+  'browser.watcher_create',
+  'browser.watcher_remove'
 ]);

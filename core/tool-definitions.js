@@ -799,5 +799,75 @@ export const TOOL_DEFS = [
         additionalProperties: false
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'browser.watcher_create',
+      description: 'Create an active watcher trigger with condition/action/interval.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          tabId: { type: 'number' },
+          urlPattern: { type: 'string' },
+          intervalSec: { type: 'number' },
+          condition: { type: 'object' },
+          action: { type: 'object' }
+        },
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'browser.watcher_list',
+      description: 'List all watchers and recent trigger state.',
+      parameters: {
+        type: 'object',
+        properties: {},
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'browser.watcher_pause',
+      description: 'Pause a watcher by id.',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'browser.watcher_resume',
+      description: 'Resume a paused watcher by id.',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+        additionalProperties: false
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'browser.watcher_remove',
+      description: 'Delete watcher by id.',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+        additionalProperties: false
+      }
+    }
   }
 ];

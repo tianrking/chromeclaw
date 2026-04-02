@@ -1,5 +1,11 @@
 import { TOOL_DEFS } from './tool-definitions.js';
-import { browserTool, callPageTool, ensureContentScript, getActiveTab } from './tab-api.js';
+import {
+  browserTool,
+  callPageTool,
+  ensureContentScript,
+  getActiveTab,
+  waitForTabLoad
+} from './tab-api.js';
 import { buildInitialMessages, buildSystemPrompt } from './prompt-builder.js';
 import { enforceToolPolicies, resolvePolicies } from './policy-guard.js';
 import { safeJsonParse, truncate } from './shared-utils.js';
@@ -23,11 +29,12 @@ function previewArgs(args) {
 export async function runAgent({ goal, settings, tabId, requestApproval }) {
   const activeTab = tabId ? { id: tabId } : await getActiveTab();
   if (!activeTab?.id) throw new Error('No active tab available');
+  let workingTabId = activeTab.id;
 
-  await ensureContentScript(activeTab.id);
+  await ensureContentScript(workingTabId);
 
   const provider = createProvider(settings);
-  const initialSnapshot = await callPageTool(activeTab.id, 'page.get_snapshot', {});
+  const initialSnapshot = await callPageTool(workingTabId, 'page.get_snapshot', {});
   const snapshot = initialSnapshot?.snapshot || {};
 
   const strategy = resolveStrategy(snapshot.url || '');
@@ -128,14 +135,17 @@ export async function runAgent({ goal, settings, tabId, requestApproval }) {
         const result = await executeWithStrategy({
           toolName,
           args: strategyArgs,
-          tabId: activeTab.id,
+          tabId: workingTabId,
           strategy,
           goal,
           snapshot,
           settings,
-          deps: { browserTool, callPageTool }
+          deps: { browserTool, callPageTool, ensureContentScript, waitForTabLoad }
         });
         const elapsedMs = Date.now() - start;
+        if (Number(result?.activeTabId)) {
+          workingTabId = Number(result.activeTabId);
+        }
 
         messages.push({
           role: 'tool',

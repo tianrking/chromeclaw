@@ -5,6 +5,13 @@ import {
   listHttpHistory,
   recordHttpHistory
 } from './http-history.js';
+import {
+  createWatcher,
+  listAllWatchers,
+  pauseWatcher,
+  removeWatcherById,
+  resumeWatcher
+} from './watcher-engine.js';
 
 export async function getActiveTab() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -49,6 +56,38 @@ export async function ensureContentScript(tabId) {
   }
 }
 
+export async function waitForTabLoad(tabId, timeoutMs = 12000) {
+  if (!tabId) return { ok: false, error: 'No tabId' };
+
+  const existing = await chrome.tabs.get(tabId).catch(() => null);
+  if (!existing) return { ok: false, error: `Tab ${tabId} not found` };
+  if (existing.status === 'complete') {
+    return { ok: true, tabId, status: 'complete', immediate: true };
+  }
+
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+      resolve({ ok: false, timeout: true, tabId, error: `waitForTabLoad timeout (${timeoutMs}ms)` });
+    }, Math.max(1000, Number(timeoutMs) || 12000));
+
+    function done(result) {
+      clearTimeout(timeout);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+      resolve(result);
+    }
+
+    function onUpdated(updatedTabId, changeInfo) {
+      if (updatedTabId !== tabId) return;
+      if (changeInfo.status === 'complete') {
+        done({ ok: true, tabId, status: 'complete', immediate: false });
+      }
+    }
+
+    chrome.tabs.onUpdated.addListener(onUpdated);
+  });
+}
+
 export async function callPageTool(tabId, toolName, args = {}) {
   const response = await sendMessageToTab(tabId, {
     type: 'chromeclaw.tool',
@@ -76,6 +115,13 @@ export async function browserTool(toolName, args = {}) {
     recordHttpHistory,
     listHttpHistory,
     getHttpHistoryItem,
-    clearHttpHistory
+    clearHttpHistory,
+    watchers: {
+      createWatcher,
+      listWatchers: listAllWatchers,
+      pauseWatcher,
+      resumeWatcher,
+      removeWatcherById
+    }
   });
 }

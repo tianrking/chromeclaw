@@ -12,7 +12,9 @@
     "downloads",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess",
-    "sidePanel"
+    "sidePanel",
+    "notifications",
+    "alarms"
   ],
   "host_permissions": [
     "http://*/*",

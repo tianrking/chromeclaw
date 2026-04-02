@@ -11,6 +11,13 @@ import { navigateForward } from './navigate-forward.js';
 import { openUrl } from './open-url.js';
 import { reloadTab } from './reload-tab.js';
 import { switchTab } from './switch-tab.js';
+import {
+  watcherCreate,
+  watcherList,
+  watcherPause,
+  watcherRemove,
+  watcherResume
+} from './watcher-tools.js';
 
 const registry = {
   'browser.get_tab_context': getTabContext,
@@ -35,7 +42,12 @@ const registry = {
   'browser.delete_cookie': deleteCookie,
   'browser.dnr_set_rules': dnrSetRules,
   'browser.dnr_list_rules': dnrListRules,
-  'browser.dnr_clear_rules': dnrClearRules
+  'browser.dnr_clear_rules': dnrClearRules,
+  'browser.watcher_create': watcherCreate,
+  'browser.watcher_list': watcherList,
+  'browser.watcher_pause': watcherPause,
+  'browser.watcher_resume': watcherResume,
+  'browser.watcher_remove': watcherRemove
 };
 
 export async function runBrowserTool(toolName, args = {}, ctx) {

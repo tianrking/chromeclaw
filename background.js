@@ -1,6 +1,11 @@
 import { runAgent } from './core/agent-loop.js';
 import { listPendingApprovals, requestApproval, resolveApproval } from './core/approval-manager.js';
 import { getSettings, saveSettings } from './core/storage.js';
+import {
+  bootstrapWatcherAlarms,
+  evaluateWatcherById,
+  evaluateWatchersForTabUpdate
+} from './core/watcher-engine.js';
 
 function normalizeHost(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -9,6 +14,7 @@ function normalizeHost(raw) {
 
 chrome.runtime.onInstalled.addListener(async () => {
   await getSettings();
+  await bootstrapWatcherAlarms();
   try {
     if (chrome.sidePanel?.setPanelBehavior) {
       await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -19,6 +25,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onStartup?.addListener(async () => {
+  await bootstrapWatcherAlarms();
   try {
     if (chrome.sidePanel?.setPanelBehavior) {
       await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -26,6 +33,40 @@ chrome.runtime.onStartup?.addListener(async () => {
   } catch {
     // ignore
   }
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (!alarm?.name || !alarm.name.startsWith('chromeclaw:watcher:')) return;
+  const id = alarm.name.split(':').pop();
+  if (!id) return;
+  await evaluateWatcherById(id, {
+    runAgentForWatcher: async ({ tabId, goal }) => {
+      const settings = await getSettings();
+      const result = await runAgent({
+        goal,
+        settings,
+        tabId,
+        requestApproval
+      });
+      return { mode: result.mode, answer: result.answer };
+    }
+  });
+});
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+  if (changeInfo?.status !== 'complete') return;
+  await evaluateWatchersForTabUpdate(tabId, {
+    runAgentForWatcher: async ({ tabId: targetTabId, goal }) => {
+      const settings = await getSettings();
+      const result = await runAgent({
+        goal,
+        settings,
+        tabId: targetTabId,
+        requestApproval
+      });
+      return { mode: result.mode, answer: result.answer };
+    }
+  });
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
