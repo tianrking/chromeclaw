@@ -4,6 +4,7 @@ const resultEl = document.getElementById('result');
 const traceEl = document.getElementById('trace');
 const statusEl = document.getElementById('status');
 const openOptionsBtn = document.getElementById('openOptions');
+const autoApproveToggleBtn = document.getElementById('autoApproveToggle');
 const approvalsEl = document.getElementById('approvals');
 const approvalsPanelEl = document.querySelector('.approvals-panel');
 const chatFeedEl = document.getElementById('chatFeed');
@@ -16,6 +17,7 @@ let activeRunId = '';
 let activeTypingNode = null;
 let liveDraftLines = [];
 let approvalCountdownTimer = null;
+let autoApproveOn = false;
 
 function setStatus(text) {
   if (statusEl) statusEl.textContent = truncateText(text, 28);
@@ -43,6 +45,17 @@ function approvalModeLabel(settings) {
   const mutation = settings?.mutationPolicy || 'auto';
   const high = settings?.highRiskPolicy || 'confirm';
   return `M:${mutation} / H:${high}`;
+}
+
+function detectAutoApprove(settings) {
+  const mutation = settings?.mutationPolicy || 'auto';
+  const high = settings?.highRiskPolicy || 'confirm';
+  return mutation === 'auto' && high === 'auto';
+}
+
+function refreshAutoApproveToggle() {
+  if (!autoApproveToggleBtn) return;
+  autoApproveToggleBtn.textContent = `Auto Approve: ${autoApproveOn ? 'ON' : 'OFF'}`;
 }
 
 function updateGlobalState(partial = {}) {
@@ -454,6 +467,8 @@ async function bootstrapState() {
       chrome.runtime.sendMessage({ type: 'chromeclaw.get_settings' }),
       getActiveTabContext()
     ]);
+    autoApproveOn = detectAutoApprove(settings);
+    refreshAutoApproveToggle();
     updateGlobalState({
       mode: settings?.providerKind || 'openai_compatible',
       strategy: resolveStrategyByHost(host),
@@ -461,6 +476,8 @@ async function bootstrapState() {
       task: 'Idle'
     });
   } catch {
+    autoApproveOn = false;
+    refreshAutoApproveToggle();
     updateGlobalState({
       mode: 'unknown',
       strategy: 'generic',
@@ -468,6 +485,34 @@ async function bootstrapState() {
       task: 'Idle'
     });
   }
+}
+
+async function toggleAutoApprove() {
+  const nextOn = !autoApproveOn;
+  const payload = nextOn
+    ? { mutationPolicy: 'auto', highRiskPolicy: 'auto', autoExecute: true }
+    : { mutationPolicy: 'confirm', highRiskPolicy: 'confirm', autoExecute: true };
+
+  const response = await chrome.runtime.sendMessage({
+    type: 'chromeclaw.save_settings',
+    payload
+  });
+  if (!response?.ok) {
+    throw new Error(response?.error || 'Failed to save auto-approve setting');
+  }
+
+  autoApproveOn = detectAutoApprove(response.settings || payload);
+  refreshAutoApproveToggle();
+  updateGlobalState({
+    approval: approvalModeLabel(response.settings || payload)
+  });
+  appendMessage({
+    role: 'system',
+    title: 'Policy',
+    text: autoApproveOn
+      ? 'Auto Approve enabled: mutation and high-risk actions run automatically.'
+      : 'Auto Approve disabled: mutation and high-risk actions require confirmation.'
+  });
 }
 
 if (runBtn) runBtn.addEventListener('click', runAgent);
@@ -480,6 +525,13 @@ if (goalEl) {
   });
 }
 if (openOptionsBtn) openOptionsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
+if (autoApproveToggleBtn) {
+  autoApproveToggleBtn.addEventListener('click', () => {
+    toggleAutoApprove().catch((error) => {
+      appendMessage({ role: 'system', title: 'Error', text: String(error) });
+    });
+  });
+}
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message?.type === 'chromeclaw.approval_updated') {
