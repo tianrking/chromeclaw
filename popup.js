@@ -5,10 +5,8 @@ const traceEl = document.getElementById('trace');
 const statusEl = document.getElementById('status');
 const openOptionsBtn = document.getElementById('openOptions');
 const autoApproveToggleBtn = document.getElementById('autoApproveToggle');
+const newChatBtn = document.getElementById('newChat');
 const sessionSelectEl = document.getElementById('sessionSelect');
-const newSessionBtn = document.getElementById('newSession');
-const deleteSessionBtn = document.getElementById('deleteSession');
-const clearSessionBtn = document.getElementById('clearSession');
 const approvalsEl = document.getElementById('approvals');
 const approvalsPanelEl = document.querySelector('.approvals-panel');
 const chatFeedEl = document.getElementById('chatFeed');
@@ -209,7 +207,22 @@ function resolveStrategyByHost(host) {
 function approvalModeLabel(settings) {
   const mutation = settings?.mutationPolicy || 'auto';
   const high = settings?.highRiskPolicy || 'confirm';
-  return `M:${mutation} / H:${high}`;
+  if (mutation === 'auto' && high === 'auto') return 'Auto';
+  if (mutation === 'confirm' && high === 'confirm') return 'Manual';
+  return `M:${mutation} · H:${high}`;
+}
+
+function providerModeLabel(kind) {
+  const map = {
+    cloud: 'Cloud Agent',
+    local: 'Local Heuristic',
+    openai_compatible: 'OpenAI Compatible',
+    anthropic_compatible: 'Anthropic Compatible',
+    zhipu_compatible: 'Zhipu GLM',
+    zai_coding_global: 'Z.AI Coding Global',
+    zai_coding_cn: 'Z.AI Coding CN'
+  };
+  return map[kind] || String(kind || 'unknown');
 }
 
 function detectAutoApprove(settings) {
@@ -224,7 +237,7 @@ function refreshAutoApproveToggle() {
 }
 
 function updateGlobalState(partial = {}) {
-  if (partial.mode && stateModeEl) stateModeEl.textContent = partial.mode;
+  if (partial.mode && stateModeEl) stateModeEl.textContent = providerModeLabel(partial.mode);
   if (partial.strategy && stateStrategyEl) stateStrategyEl.textContent = partial.strategy;
   if (partial.approval && stateApprovalEl) stateApprovalEl.textContent = partial.approval;
   if (partial.task && stateTaskEl) stateTaskEl.textContent = truncateText(partial.task, 42);
@@ -704,36 +717,19 @@ if (autoApproveToggleBtn) {
     });
   });
 }
-if (sessionSelectEl) {
-  sessionSelectEl.addEventListener('change', () => switchSession(sessionSelectEl.value));
-}
-if (newSessionBtn) {
-  newSessionBtn.addEventListener('click', () => {
+if (newChatBtn) {
+  newChatBtn.addEventListener('click', () => {
     createSessionAndSwitch();
     appendMessage({
       role: 'system',
       title: 'System',
-      text: 'New session created.',
+      text: 'New chat started.',
       persist: true
     });
   });
 }
-if (deleteSessionBtn) {
-  deleteSessionBtn.addEventListener('click', () => {
-    if (!confirm('Delete current session?')) return;
-    deleteCurrentSession();
-  });
-}
-if (clearSessionBtn) {
-  clearSessionBtn.addEventListener('click', () => {
-    clearCurrentSessionMessages();
-    appendMessage({
-      role: 'system',
-      title: 'System',
-      text: 'Current session cleared.',
-      persist: true
-    });
-  });
+if (sessionSelectEl) {
+  sessionSelectEl.addEventListener('change', () => switchSession(sessionSelectEl.value));
 }
 
 chrome.runtime.onMessage.addListener((message) => {

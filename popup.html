@@ -15,8 +15,11 @@
         <span class="brand-sub">Page-aware browser agent</span>
       </div>
       <span id="status" class="status-pill">Idle</span>
-      <button id="autoApproveToggle" class="ghost">Auto Approve: OFF</button>
-      <button id="openOptions" class="ghost">Options</button>
+      <div class="top-actions">
+        <button id="newChat" class="ghost">New Chat</button>
+        <button id="autoApproveToggle" class="ghost">Auto Approve: OFF</button>
+        <button id="openOptions" class="ghost">Options</button>
+      </div>
     </header>
 
     <section class="global-state" aria-label="Global status">
@@ -38,12 +41,7 @@
       </div>
     </section>
 
-    <section class="session-bar" aria-label="Conversation sessions">
-      <select id="sessionSelect" title="Conversation session"></select>
-      <button id="newSession" class="ghost">New</button>
-      <button id="deleteSession" class="ghost">Delete</button>
-      <button id="clearSession" class="ghost">Clear</button>
-    </section>
+    <select id="sessionSelect" class="hidden" title="Conversation session"></select>
 
     <section id="chatFeed" class="chat-feed" aria-label="Conversation"></section>
 
