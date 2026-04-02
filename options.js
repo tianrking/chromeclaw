@@ -27,7 +27,7 @@ function showStatus(text) {
 async function load() {
   let response = null;
   try {
-    response = await chrome.runtime.sendMessage({ type: 'chromeclaw.get_settings' });
+    response = await chrome.runtime.sendMessage({ type: 'farito.get_settings' });
   } catch {
     response = null;
   }
@@ -74,7 +74,7 @@ async function save() {
     temperature: Math.max(0, Math.min(2, Number(el.temperature.value) || 0.2))
   };
 
-  const response = await chrome.runtime.sendMessage({ type: 'chromeclaw.save_settings', payload });
+  const response = await chrome.runtime.sendMessage({ type: 'farito.save_settings', payload });
   if (!response?.ok) throw new Error(response?.error || 'Save failed');
   showStatus('Saved');
 }

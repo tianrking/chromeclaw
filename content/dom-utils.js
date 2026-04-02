@@ -1,5 +1,5 @@
 (() => {
-  const ELEMENT_ATTR = 'data-chromeclaw-id';
+  const ELEMENT_ATTR = 'data-farito-id';
 
   function textOf(el) {
     if (!el) return '';
@@ -94,7 +94,7 @@
     return null;
   }
 
-  window.ChromeClawDom = {
+  window.FaritoDom = {
     ELEMENT_ATTR,
     textOf,
     safeQuery,

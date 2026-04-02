@@ -1,5 +1,5 @@
-const MANAGED_DNR_TAG = 'chromeclaw-managed';
-const MANAGED_DNR_KEY = 'chromeclaw.dnr.managed_rule_ids';
+const MANAGED_DNR_TAG = 'farito-managed';
+const MANAGED_DNR_KEY = 'farito.dnr.managed_rule_ids';
 
 function toResourceTypes(items) {
   const allowed = new Set([

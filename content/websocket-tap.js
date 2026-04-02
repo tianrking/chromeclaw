@@ -1,5 +1,5 @@
 (() => {
-  const state = (window.__chromeclawWsTap = window.__chromeclawWsTap || {
+  const state = (window.__faritoWsTap = window.__faritoWsTap || {
     installed: false,
     enabled: false,
     maxEvents: 400,
@@ -109,5 +109,5 @@
     return { ok: true, cleared: count };
   }
 
-  window.ChromeClawWebSocketTap = { tap, getEvents, clearEvents };
+  window.FaritoWebSocketTap = { tap, getEvents, clearEvents };
 })();

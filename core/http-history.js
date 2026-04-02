@@ -1,4 +1,4 @@
-const HTTP_HISTORY_KEY = 'chromeclaw.http_history';
+const HTTP_HISTORY_KEY = 'farito.http_history';
 const HTTP_HISTORY_MAX = 120;
 
 function nowIso() {

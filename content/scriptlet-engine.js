@@ -1,5 +1,5 @@
 (() => {
-  const runtime = (window.__chromeclawRuntime = window.__chromeclawRuntime || {
+  const runtime = (window.__faritoRuntime = window.__faritoRuntime || {
     hooks: [],
     scriptlets: []
   });
@@ -10,7 +10,7 @@
     return Math.max(min, Math.min(max, n));
   }
 
-  const sharedTruncate = window.ChromeClawToolShared?.truncate;
+  const sharedTruncate = window.FaritoToolShared?.truncate;
   function truncate(str, maxChars = 2000) {
     if (typeof sharedTruncate === 'function') return sharedTruncate(str, maxChars);
     const s = String(str || '');
@@ -112,7 +112,7 @@
           const style = getComputedStyle(el);
           if (style.position !== 'fixed' && style.position !== 'sticky') continue;
           if (style.display === 'none' || style.visibility === 'hidden') continue;
-          el.dataset.chromeclawHidden = '1';
+          el.dataset.faritoHidden = '1';
           el.style.display = 'none';
           changed.push({
             tag: el.tagName.toLowerCase(),
@@ -181,5 +181,5 @@
     return { ok: true, hook: hookName, executed: results.length, results };
   }
 
-  window.ChromeClawScriptlets = { list, run, runHook };
+  window.FaritoScriptlets = { list, run, runHook };
 })();

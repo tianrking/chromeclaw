@@ -1,6 +1,6 @@
 (() => {
-  const { D, HIGHLIGHT_ID, truncate } = window.ChromeClawToolShared;
-  const registry = window.ChromeClawPageToolRegistry;
+  const { D, HIGHLIGHT_ID, truncate } = window.FaritoToolShared;
+  const registry = window.FaritoPageToolRegistry;
 
   function queryElements({ selector, text, limit = 20 }) {
     let matches = [];

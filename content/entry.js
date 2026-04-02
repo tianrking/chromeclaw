@@ -1,47 +1,47 @@
 (() => {
   function flushQueuedHooks() {
-    const queue = Array.isArray(window.__chromeclawHookQueue) ? window.__chromeclawHookQueue : [];
-    if (!window.ChromeClawScriptlets || !queue.length) return;
+    const queue = Array.isArray(window.__faritoHookQueue) ? window.__faritoHookQueue : [];
+    if (!window.FaritoScriptlets || !queue.length) return;
     while (queue.length) {
       const item = queue.shift();
       if (!item || !item.hook) continue;
       try {
-        window.ChromeClawScriptlets.runHook(item.hook);
+        window.FaritoScriptlets.runHook(item.hook);
       } catch {
         // keep content script resilient
       }
     }
   }
 
-  window.addEventListener('chromeclaw:hook', (event) => {
+  window.addEventListener('farito:hook', (event) => {
     const hook = event?.detail?.hook;
-    if (!hook || !window.ChromeClawScriptlets) return;
+    if (!hook || !window.FaritoScriptlets) return;
     try {
-      window.ChromeClawScriptlets.runHook(hook);
+      window.FaritoScriptlets.runHook(hook);
     } catch {
       // ignore hook failures
     }
   });
 
   flushQueuedHooks();
-  if (window.ChromeClawScriptlets) {
-    window.ChromeClawScriptlets.runHook('document_idle');
+  if (window.FaritoScriptlets) {
+    window.FaritoScriptlets.runHook('document_idle');
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!message || typeof message !== 'object') return;
 
-    if (message.type === 'chromeclaw.ping') {
+    if (message.type === 'farito.ping') {
       sendResponse({ ok: true, url: location.href, title: document.title });
       return;
     }
 
-    if (message.type === 'chromeclaw.tool') {
+    if (message.type === 'farito.tool') {
       (async () => {
         try {
           const toolName = message.toolName;
           const args = message.args || {};
-          const result = await window.ChromeClawPageTools.run(toolName, args);
+          const result = await window.FaritoPageTools.run(toolName, args);
           sendResponse({ ok: true, result });
         } catch (error) {
           sendResponse({ ok: false, error: String(error) });

@@ -1,7 +1,7 @@
 (() => {
-  const REQUEST_EVENT = 'chromeclaw:page-eval-request';
-  const RESPONSE_EVENT = 'chromeclaw:page-eval-response';
-  const MARKER = '__chromeclawBridgeInstalled';
+  const REQUEST_EVENT = 'farito:page-eval-request';
+  const RESPONSE_EVENT = 'farito:page-eval-response';
+  const MARKER = '__faritoBridgeInstalled';
 
   function installBridge() {
     if (window[MARKER]) return;
@@ -10,8 +10,8 @@
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.textContent = `(() => {
-      if (window.__chromeclawPageBridgeReady) return;
-      window.__chromeclawPageBridgeReady = true;
+      if (window.__faritoPageBridgeReady) return;
+      window.__faritoPageBridgeReady = true;
 
       function serialize(value) {
         try {
@@ -83,5 +83,5 @@
     });
   }
 
-  window.ChromeClawPageBridge = { evalInPageWorld };
+  window.FaritoPageBridge = { evalInPageWorld };
 })();

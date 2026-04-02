@@ -23,7 +23,7 @@ function normalizeIntervalSec(value) {
 }
 
 function alarmName(id) {
-  return `chromeclaw:watcher:${id}`;
+  return `farito:watcher:${id}`;
 }
 
 function normalizeWatcherInput(input = {}) {
@@ -76,7 +76,7 @@ async function sendMessageToTab(tabId, message) {
 
 async function ensureContentScript(tabId) {
   try {
-    await sendMessageToTab(tabId, { type: 'chromeclaw.ping' });
+    await sendMessageToTab(tabId, { type: 'farito.ping' });
     return true;
   } catch {
     try {
@@ -106,7 +106,7 @@ async function ensureContentScript(tabId) {
 
 async function callPageTool(tabId, toolName, args = {}) {
   const response = await sendMessageToTab(tabId, {
-    type: 'chromeclaw.tool',
+    type: 'farito.tool',
     toolName,
     args
   });

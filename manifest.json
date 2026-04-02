@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ChromeClaw Agent",
+  "name": "Farito Agent",
   "version": "0.1.1",
   "description": "Agentic browser copilot that can inspect the full current page and execute safe web actions.",
   "permissions": [
@@ -25,7 +25,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "ChromeClaw Agent"
+    "default_title": "Farito Agent"
   },
   "side_panel": {
     "default_path": "sidepanel.html"

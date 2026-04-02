@@ -2,7 +2,7 @@ import { trimLargePayload } from './shared-utils.js';
 
 export function buildSystemPrompt(settings, siteStrategyCtx) {
   const base = [
-    'You are ChromeClaw, a practical browser agent extension.',
+    'You are Farito, a practical browser agent extension.',
     'Use tools to inspect the page before acting.',
     'Prefer deterministic actions with clear selectors.',
     'Do not perform destructive actions unless explicitly asked.',

@@ -1,10 +1,10 @@
 (() => {
   async function run(toolName, args = {}) {
-    if (!window.ChromeClawPageToolRegistry) {
+    if (!window.FaritoPageToolRegistry) {
       return { ok: false, error: 'Page tool registry not ready' };
     }
-    return window.ChromeClawPageToolRegistry.run(toolName, args);
+    return window.FaritoPageToolRegistry.run(toolName, args);
   }
 
-  window.ChromeClawPageTools = { run };
+  window.FaritoPageTools = { run };
 })();

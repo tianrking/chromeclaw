@@ -1,4 +1,4 @@
-ChromeClaw Source-Available License (CSAL) v1.0
+Farito Source-Available License (CSAL) v1.0
 Copyright (c) 2026 tianrking
 
 1. Grant (Non-Commercial)
@@ -16,12 +16,12 @@ For commercial licensing, contact: tian.r.king@gmail.com
 3. Attribution Required for Redistribution and Derivatives
 If you redistribute this software, modified versions, or derivative works (in source or binary form), you must:
 - Keep this license text intact
-- Clearly state that your work is based on ChromeClaw
+- Clearly state that your work is based on Farito
 - Provide an explicit source attribution to the original project repository
 - Mark your modifications and dates of modification
 
 Suggested attribution text:
-"This project is based on ChromeClaw by tianrking. Original source: https://github.com/tianrking/chromeclaw"
+"This project is based on Farito by tianrking. Original source: https://github.com/tianrking/farito"
 
 4. Prohibited Without Commercial License
 Without a commercial license, you may not:

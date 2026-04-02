@@ -33,7 +33,7 @@ export async function sendMessageToTab(tabId, message) {
 
 export async function ensureContentScript(tabId) {
   try {
-    await sendMessageToTab(tabId, { type: 'chromeclaw.ping' });
+    await sendMessageToTab(tabId, { type: 'farito.ping' });
     return;
   } catch {
     await chrome.scripting.executeScript({
@@ -90,7 +90,7 @@ export async function waitForTabLoad(tabId, timeoutMs = 12000) {
 
 export async function callPageTool(tabId, toolName, args = {}) {
   const response = await sendMessageToTab(tabId, {
-    type: 'chromeclaw.tool',
+    type: 'farito.tool',
     toolName,
     args
   });

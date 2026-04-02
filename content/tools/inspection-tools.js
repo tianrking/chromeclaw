@@ -1,6 +1,6 @@
 (() => {
-  const { D, truncate } = window.ChromeClawToolShared;
-  const registry = window.ChromeClawPageToolRegistry;
+  const { D, truncate } = window.FaritoToolShared;
+  const registry = window.FaritoPageToolRegistry;
 
   function getMetaMap() {
     const metas = Array.from(document.querySelectorAll('meta'));
@@ -216,11 +216,11 @@
       },
       lifecycle: {
         readyState: document.readyState,
-        hookQueueSize: Array.isArray(window.__chromeclawHookQueue)
-          ? window.__chromeclawHookQueue.length
+        hookQueueSize: Array.isArray(window.__faritoHookQueue)
+          ? window.__faritoHookQueue.length
           : 0,
-        hookEvents: Array.isArray(window.__chromeclawRuntime?.hooks)
-          ? window.__chromeclawRuntime.hooks.slice(-8)
+        hookEvents: Array.isArray(window.__faritoRuntime?.hooks)
+          ? window.__faritoRuntime.hooks.slice(-8)
           : []
       },
       profile: fast ? 'fast' : 'full'
@@ -305,11 +305,11 @@
       performance: perf,
       stylesheets,
       runtime: {
-        hooks: Array.isArray(window.__chromeclawRuntime?.hooks)
-          ? window.__chromeclawRuntime.hooks.slice(-20)
+        hooks: Array.isArray(window.__faritoRuntime?.hooks)
+          ? window.__faritoRuntime.hooks.slice(-20)
           : [],
-        scriptlets: Array.isArray(window.__chromeclawRuntime?.scriptlets)
-          ? window.__chromeclawRuntime.scriptlets.slice(-20)
+        scriptlets: Array.isArray(window.__faritoRuntime?.scriptlets)
+          ? window.__faritoRuntime.scriptlets.slice(-20)
           : []
       }
     };

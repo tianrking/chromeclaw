@@ -11,5 +11,5 @@
     return handler(args || {});
   }
 
-  window.ChromeClawPageToolRegistry = { register, run };
+  window.FaritoPageToolRegistry = { register, run };
 })();

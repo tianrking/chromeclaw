@@ -1,5 +1,5 @@
 (() => {
-  const state = (window.__chromeclawObservability = window.__chromeclawObservability || {
+  const state = (window.__faritoObservability = window.__faritoObservability || {
     installed: false,
     network: {
       max: 1200,
@@ -45,11 +45,11 @@
   }
 
   function installNetworkHooks() {
-    if (window.__chromeclawNetworkHookInstalled) return;
-    window.__chromeclawNetworkHookInstalled = true;
+    if (window.__faritoNetworkHookInstalled) return;
+    window.__faritoNetworkHookInstalled = true;
 
     const nativeFetch = window.fetch.bind(window);
-    window.fetch = async function chromeclawFetch(input, init = {}) {
+    window.fetch = async function faritoFetch(input, init = {}) {
       const start = performance.now();
       const method = String(init?.method || 'GET').toUpperCase();
       const url = typeof input === 'string' ? input : String(input?.url || '');
@@ -101,7 +101,7 @@
       const open = NativeXHR.prototype.open;
       const send = NativeXHR.prototype.send;
       NativeXHR.prototype.open = function patchedOpen(method, url, ...rest) {
-        this.__chromeclawMeta = {
+        this.__faritoMeta = {
           method: String(method || 'GET').toUpperCase(),
           url: String(url || ''),
           start: 0
@@ -109,9 +109,9 @@
         return open.call(this, method, url, ...rest);
       };
       NativeXHR.prototype.send = function patchedSend(body) {
-        if (this.__chromeclawMeta) this.__chromeclawMeta.start = performance.now();
+        if (this.__faritoMeta) this.__faritoMeta.start = performance.now();
         this.addEventListener('loadend', () => {
-          const meta = this.__chromeclawMeta || {};
+          const meta = this.__faritoMeta || {};
           const durationMs = meta.start ? Math.round(performance.now() - meta.start) : 0;
           pushWithCap(
             state.network.logs,
@@ -168,8 +168,8 @@
   }
 
   function installConsoleHook() {
-    if (window.__chromeclawConsoleHookInstalled) return;
-    window.__chromeclawConsoleHookInstalled = true;
+    if (window.__faritoConsoleHookInstalled) return;
+    window.__faritoConsoleHookInstalled = true;
     const levels = ['log', 'info', 'warn', 'error', 'debug'];
     for (const level of levels) {
       const native = console[level] ? console[level].bind(console) : null;
@@ -191,8 +191,8 @@
   }
 
   function installPerformanceObservers() {
-    if (window.__chromeclawPerfObsInstalled) return;
-    window.__chromeclawPerfObsInstalled = true;
+    if (window.__faritoPerfObsInstalled) return;
+    window.__faritoPerfObsInstalled = true;
     if (typeof PerformanceObserver !== 'function') return;
 
     try {
@@ -494,7 +494,7 @@
     };
   }
 
-  window.ChromeClawObservability = {
+  window.FaritoObservability = {
     install,
     getNetworkLog,
     getConsoleLog,

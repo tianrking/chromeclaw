@@ -7,7 +7,7 @@ import {
   evaluateWatchersForTabUpdate
 } from './core/watcher-engine.js';
 
-console.info('[ChromeClaw] background booted, build=0.1.1, rev=527cb3e');
+console.info('[Farito] background booted, build=0.1.1, rev=527cb3e');
 
 function normalizeHost(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -38,7 +38,7 @@ chrome.runtime.onStartup?.addListener(async () => {
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (!alarm?.name || !alarm.name.startsWith('chromeclaw:watcher:')) return;
+  if (!alarm?.name || !alarm.name.startsWith('farito:watcher:')) return;
   const id = alarm.name.split(':').pop();
   if (!id) return;
   await evaluateWatcherById(id, {
@@ -74,7 +74,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== 'object') return;
 
-  if (message.type === 'chromeclaw.run_agent') {
+  if (message.type === 'farito.run_agent') {
     (async () => {
       const settings = await getSettings();
       const runId =
@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const emitEvent = (event) => {
         try {
           chrome.runtime.sendMessage({
-            type: 'chromeclaw.agent_event',
+            type: 'farito.agent_event',
             runId,
             event,
             at: Date.now()
@@ -107,21 +107,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === 'chromeclaw.get_settings') {
+  if (message.type === 'farito.get_settings') {
     getSettings()
       .then((settings) => sendResponse({ ok: true, settings }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
 
-  if (message.type === 'chromeclaw.save_settings') {
+  if (message.type === 'farito.save_settings') {
     saveSettings(message.payload || {})
       .then((settings) => sendResponse({ ok: true, settings }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
 
-  if (message.type === 'chromeclaw.allow_tool_for_site') {
+  if (message.type === 'farito.allow_tool_for_site') {
     (async () => {
       const host = normalizeHost(String(message.host || ''));
       const toolName = String(message.toolName || '');
@@ -155,12 +155,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === 'chromeclaw.approval_list') {
+  if (message.type === 'farito.approval_list') {
     sendResponse({ ok: true, items: listPendingApprovals() });
     return;
   }
 
-  if (message.type === 'chromeclaw.approval_decide') {
+  if (message.type === 'farito.approval_decide') {
     try {
       const result = resolveApproval(String(message.id || ''), {
         approved: Boolean(message.approved),

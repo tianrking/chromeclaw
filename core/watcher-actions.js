@@ -9,7 +9,7 @@ export async function executeWatcherAction(watcher, context) {
   const actionType = String(action.type || 'notify');
 
   if (actionType === 'notify') {
-    const title = clampText(action.title || `ChromeClaw watcher: ${watcher.name || watcher.id}`, 80);
+    const title = clampText(action.title || `Farito watcher: ${watcher.name || watcher.id}`, 80);
     const message = clampText(
       action.message ||
         `Condition matched on ${context?.tab?.url || watcher?.urlPattern || 'current site'}.`,

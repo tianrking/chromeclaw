@@ -1,6 +1,6 @@
 (() => {
-  const D = window.ChromeClawDom;
-  const HIGHLIGHT_ID = 'chromeclaw-highlight-box';
+  const D = window.FaritoDom;
+  const HIGHLIGHT_ID = 'farito-highlight-box';
 
   function truncate(str, maxChars = 120000) {
     const raw = String(str || '');
@@ -14,5 +14,5 @@
     return Math.max(min, Math.min(max, num));
   }
 
-  window.ChromeClawToolShared = { D, HIGHLIGHT_ID, truncate, clamp };
+  window.FaritoToolShared = { D, HIGHLIGHT_ID, truncate, clamp };
 })();

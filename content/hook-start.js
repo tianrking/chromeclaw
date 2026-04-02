@@ -1,6 +1,6 @@
 (() => {
-  const queue = (window.__chromeclawHookQueue = window.__chromeclawHookQueue || []);
+  const queue = (window.__faritoHookQueue = window.__faritoHookQueue || []);
   const item = { hook: 'document_start', ts: Date.now() };
   queue.push(item);
-  window.dispatchEvent(new CustomEvent('chromeclaw:hook', { detail: item }));
+  window.dispatchEvent(new CustomEvent('farito:hook', { detail: item }));
 })();

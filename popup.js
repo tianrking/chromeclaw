@@ -18,7 +18,7 @@ let liveDraftLines = [];
 let approvalCountdownTimer = null;
 let autoApproveOn = false;
 const approvalCardMap = new Map();
-const CHAT_STORE_KEY = 'chromeclaw.chat.sessions.v1';
+const CHAT_STORE_KEY = 'farito.chat.sessions.v1';
 const MAX_SESSION_MESSAGES = 200;
 let chatState = { activeId: '', sessions: [] };
 let persistTimer = null;
@@ -467,7 +467,7 @@ async function runAgent() {
 
   const typingMsg = appendMessage({
     role: 'assistant',
-    title: 'ChromeClaw',
+    title: 'Farito',
     text: 'Executing plan',
     typing: true
   });
@@ -476,7 +476,7 @@ async function runAgent() {
 
   try {
     const response = await chrome.runtime.sendMessage({
-      type: 'chromeclaw.run_agent',
+      type: 'farito.run_agent',
       tabId,
       goal,
       clientRunId
@@ -500,7 +500,7 @@ async function runAgent() {
     activeTypingNode = null;
     activeRunId = '';
     liveDraftLines = [];
-    const doneMsg = appendMessage({ role: 'assistant', title: 'ChromeClaw', text: answer });
+    const doneMsg = appendMessage({ role: 'assistant', title: 'Farito', text: answer });
     if (doneMsg) renderToolCards(doneMsg, result.toolEvents || []);
 
     updateGlobalState({
@@ -532,7 +532,7 @@ async function runAgent() {
 
 async function loadApprovals() {
   try {
-    const response = await chrome.runtime.sendMessage({ type: 'chromeclaw.approval_list' });
+    const response = await chrome.runtime.sendMessage({ type: 'farito.approval_list' });
     if (!response?.ok) return;
     renderApprovalsInChat(response.items || []);
   } catch {
@@ -542,7 +542,7 @@ async function loadApprovals() {
 
 async function decideApproval(id, approved) {
   await chrome.runtime.sendMessage({
-    type: 'chromeclaw.approval_decide',
+    type: 'farito.approval_decide',
     id,
     approved
   });
@@ -625,7 +625,7 @@ function renderApprovalsInChat(items) {
 async function bootstrapState() {
   try {
     const [{ settings }, { host }] = await Promise.all([
-      chrome.runtime.sendMessage({ type: 'chromeclaw.get_settings' }),
+      chrome.runtime.sendMessage({ type: 'farito.get_settings' }),
       getActiveTabContext()
     ]);
     autoApproveOn = detectAutoApprove(settings);
@@ -655,7 +655,7 @@ async function toggleAutoApprove() {
     : { mutationPolicy: 'confirm', highRiskPolicy: 'confirm', autoExecute: true };
 
   const response = await chrome.runtime.sendMessage({
-    type: 'chromeclaw.save_settings',
+    type: 'farito.save_settings',
     payload
   });
   if (!response?.ok) {
@@ -709,11 +709,11 @@ if (sessionSelectEl) {
 }
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message?.type === 'chromeclaw.approval_updated') {
+  if (message?.type === 'farito.approval_updated') {
     loadApprovals();
     return;
   }
-  if (message?.type !== 'chromeclaw.agent_event') return;
+  if (message?.type !== 'farito.agent_event') return;
   if (!activeRunId) return;
   if (String(message.runId || '') !== String(activeRunId)) return;
 

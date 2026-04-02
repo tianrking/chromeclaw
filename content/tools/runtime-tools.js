@@ -1,14 +1,14 @@
 (() => {
-  const registry = window.ChromeClawPageToolRegistry;
+  const registry = window.FaritoPageToolRegistry;
 
   async function evalJs({ code, args, timeoutMs } = {}) {
     if (
-      !window.ChromeClawPageBridge ||
-      typeof window.ChromeClawPageBridge.evalInPageWorld !== 'function'
+      !window.FaritoPageBridge ||
+      typeof window.FaritoPageBridge.evalInPageWorld !== 'function'
     ) {
       return { ok: false, error: 'Page bridge unavailable' };
     }
-    return window.ChromeClawPageBridge.evalInPageWorld({
+    return window.FaritoPageBridge.evalInPageWorld({
       code,
       args: args || {},
       timeoutMs: Number(timeoutMs) || 5000
@@ -16,84 +16,84 @@
   }
 
   function listScriptlets() {
-    if (!window.ChromeClawScriptlets || typeof window.ChromeClawScriptlets.list !== 'function') {
+    if (!window.FaritoScriptlets || typeof window.FaritoScriptlets.list !== 'function') {
       return { ok: false, error: 'Scriptlet engine unavailable' };
     }
-    return { ok: true, items: window.ChromeClawScriptlets.list() };
+    return { ok: true, items: window.FaritoScriptlets.list() };
   }
 
   function runScriptlet({ name, args } = {}) {
-    if (!window.ChromeClawScriptlets || typeof window.ChromeClawScriptlets.run !== 'function') {
+    if (!window.FaritoScriptlets || typeof window.FaritoScriptlets.run !== 'function') {
       return { ok: false, error: 'Scriptlet engine unavailable' };
     }
-    return window.ChromeClawScriptlets.run(name, args || {});
+    return window.FaritoScriptlets.run(name, args || {});
   }
 
   function tapWebSocket(args = {}) {
-    if (!window.ChromeClawWebSocketTap || typeof window.ChromeClawWebSocketTap.tap !== 'function') {
+    if (!window.FaritoWebSocketTap || typeof window.FaritoWebSocketTap.tap !== 'function') {
       return { ok: false, error: 'WebSocket tap engine unavailable' };
     }
-    return window.ChromeClawWebSocketTap.tap(args);
+    return window.FaritoWebSocketTap.tap(args);
   }
 
   function getWebSocketEvents(args = {}) {
     if (
-      !window.ChromeClawWebSocketTap ||
-      typeof window.ChromeClawWebSocketTap.getEvents !== 'function'
+      !window.FaritoWebSocketTap ||
+      typeof window.FaritoWebSocketTap.getEvents !== 'function'
     ) {
       return { ok: false, error: 'WebSocket tap engine unavailable' };
     }
-    return window.ChromeClawWebSocketTap.getEvents(args);
+    return window.FaritoWebSocketTap.getEvents(args);
   }
 
   function clearWebSocketEvents() {
     if (
-      !window.ChromeClawWebSocketTap ||
-      typeof window.ChromeClawWebSocketTap.clearEvents !== 'function'
+      !window.FaritoWebSocketTap ||
+      typeof window.FaritoWebSocketTap.clearEvents !== 'function'
     ) {
       return { ok: false, error: 'WebSocket tap engine unavailable' };
     }
-    return window.ChromeClawWebSocketTap.clearEvents();
+    return window.FaritoWebSocketTap.clearEvents();
   }
 
   function getNetworkLog(args = {}) {
     if (
-      !window.ChromeClawObservability ||
-      typeof window.ChromeClawObservability.getNetworkLog !== 'function'
+      !window.FaritoObservability ||
+      typeof window.FaritoObservability.getNetworkLog !== 'function'
     ) {
       return { ok: false, error: 'Observability engine unavailable' };
     }
-    return window.ChromeClawObservability.getNetworkLog(args);
+    return window.FaritoObservability.getNetworkLog(args);
   }
 
   function getConsoleLog(args = {}) {
     if (
-      !window.ChromeClawObservability ||
-      typeof window.ChromeClawObservability.getConsoleLog !== 'function'
+      !window.FaritoObservability ||
+      typeof window.FaritoObservability.getConsoleLog !== 'function'
     ) {
       return { ok: false, error: 'Observability engine unavailable' };
     }
-    return window.ChromeClawObservability.getConsoleLog(args);
+    return window.FaritoObservability.getConsoleLog(args);
   }
 
   function watchDom(args = {}) {
     if (
-      !window.ChromeClawObservability ||
-      typeof window.ChromeClawObservability.watchDom !== 'function'
+      !window.FaritoObservability ||
+      typeof window.FaritoObservability.watchDom !== 'function'
     ) {
       return { ok: false, error: 'Observability engine unavailable' };
     }
-    return window.ChromeClawObservability.watchDom(args);
+    return window.FaritoObservability.watchDom(args);
   }
 
   async function getPerformance(args = {}) {
     if (
-      !window.ChromeClawObservability ||
-      typeof window.ChromeClawObservability.getPerformance !== 'function'
+      !window.FaritoObservability ||
+      typeof window.FaritoObservability.getPerformance !== 'function'
     ) {
       return { ok: false, error: 'Observability engine unavailable' };
     }
-    return window.ChromeClawObservability.getPerformance(args);
+    return window.FaritoObservability.getPerformance(args);
   }
 
   registry.register('page.eval_js', evalJs);

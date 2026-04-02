@@ -7,7 +7,7 @@ function nowIso() {
 
 function emitPendingUpdate() {
   try {
-    chrome.runtime.sendMessage({ type: 'chromeclaw.approval_updated' });
+    chrome.runtime.sendMessage({ type: 'farito.approval_updated' });
   } catch {
     // popup may not be open
   }

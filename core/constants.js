@@ -1,4 +1,4 @@
-export const SETTINGS_KEY = 'chromeclaw.settings';
+export const SETTINGS_KEY = 'farito.settings';
 
 export const DEFAULT_SETTINGS = {
   providerKind: 'openai_compatible',

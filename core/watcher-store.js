@@ -1,4 +1,4 @@
-const WATCHERS_KEY = 'chromeclaw.watchers';
+const WATCHERS_KEY = 'farito.watchers';
 
 function nowIso() {
   return new Date().toISOString();
