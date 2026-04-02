@@ -10,12 +10,13 @@ const stateModeEl = document.getElementById('stateMode');
 const stateStrategyEl = document.getElementById('stateStrategy');
 const stateApprovalEl = document.getElementById('stateApproval');
 const stateTaskEl = document.getElementById('stateTask');
+const approvalSummaryEl = document.getElementById('approvalSummary');
 let activeRunId = '';
 let activeTypingNode = null;
 let liveDraftLines = [];
 
 function setStatus(text) {
-  if (statusEl) statusEl.textContent = text;
+  if (statusEl) statusEl.textContent = truncateText(text, 28);
 }
 
 function truncateText(text, max = 140) {
@@ -279,7 +280,10 @@ async function runAgent() {
     });
     setStatus(`Done (${result.mode || 'unknown'} mode)`);
   } catch (err) {
-    const msg = String(err);
+    let msg = String(err);
+    if (msg.includes('Provider error (500)')) {
+      msg += '\n\nProvider network failed. Retry in 5-10s, or switch provider endpoint in Options.';
+    }
     if (resultEl) resultEl.textContent = msg;
     if (typingMsg?.parentNode) typingMsg.remove();
     activeTypingNode = null;
@@ -313,6 +317,9 @@ async function decideApproval(id, approved) {
 }
 
 function renderApprovals(items) {
+  if (approvalSummaryEl) {
+    approvalSummaryEl.textContent = `Action Approval (${items.length})`;
+  }
   if (!approvalsEl) return;
   approvalsEl.innerHTML = '';
   if (!items.length) {

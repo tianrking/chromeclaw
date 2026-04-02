@@ -11,37 +11,38 @@
   <main class="chat-app">
     <header class="topbar">
       <div class="brand">
-        <h1>ChromeClaw</h1>
-        <span id="status" class="status">Idle</span>
+        <h1>ChromeClaw Chat</h1>
+        <span class="brand-sub">Page-aware browser agent</span>
       </div>
+      <span id="status" class="status-pill">Idle</span>
       <button id="openOptions" class="ghost">Options</button>
     </header>
 
     <section class="global-state" aria-label="Global status">
       <div class="state-item">
-        <span class="state-label">Mode</span>
+        <span class="state-label">mode</span>
         <span id="stateMode" class="state-value">-</span>
       </div>
       <div class="state-item">
-        <span class="state-label">Strategy</span>
+        <span class="state-label">strategy</span>
         <span id="stateStrategy" class="state-value">generic</span>
       </div>
       <div class="state-item">
-        <span class="state-label">Approval</span>
+        <span class="state-label">approval</span>
         <span id="stateApproval" class="state-value">-</span>
       </div>
       <div class="state-item state-task">
-        <span class="state-label">Task</span>
+        <span class="state-label">task</span>
         <span id="stateTask" class="state-value">Idle</span>
       </div>
     </section>
 
     <section id="chatFeed" class="chat-feed" aria-label="Conversation"></section>
 
-    <section class="panel approvals-panel">
-      <h2>Action Approval</h2>
+    <details class="panel approvals-panel">
+      <summary id="approvalSummary">Action Approval (0)</summary>
       <div id="approvals" class="approvals"></div>
-    </section>
+    </details>
 
     <details class="panel debug-panel">
       <summary>Debug Trace</summary>
