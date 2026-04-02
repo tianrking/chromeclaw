@@ -1,0 +1,22 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Farito logo">
+  <defs>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="180" rx="20" fill="#f8fbff"/>
+  <path d="M70 98 L270 52 L270 110 L70 156 Z" fill="url(#beam)"/>
+  <rect x="34" y="60" width="30" height="76" rx="8" fill="url(#tower)"/>
+  <rect x="30" y="52" width="38" height="14" rx="4" fill="#0f172a"/>
+  <circle cx="49" cy="58" r="4" fill="#fde047"/>
+  <path d="M24 138 H76" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
+
+  <text x="320" y="84" fill="#0f172a" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="48" font-weight="700">Farito</text>
+  <text x="320" y="118" fill="#475569" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="20">A small lighthouse for every page.</text>
+</svg>

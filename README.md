@@ -1,103 +1,85 @@
-# Farito
+<p align="center">
+  <img src="assets/farito-logo.svg" alt="Farito logo" width="680" />
+</p>
 
-Farito 是一个 Chrome MV3 浏览器 Agent 插件。
+<p align="center">
+  <strong>Farito</strong> comes from Spanish <em>faro</em> (lighthouse) + <em>-ito</em> (small): <strong>"little lighthouse"</strong>.
+</p>
 
-它的定位很直接：
-- 读取当前页面的结构与语义信息
-- 在可控策略下执行页面与浏览器操作
-- 用“聊天 + 工具调用 + 审批流”完成复杂任务
+<p align="center">
+Your browser is a sea. Every webpage is an island.  
+Farito is the small lighthouse beside you: quiet, precise, and always on.
+</p>
 
-## Highlights
+<p align="center">
+  <a href="docs/README.zh-CN.md">中文</a> ·
+  <a href="docs/README.es.md">Español</a>
+</p>
 
-- Chat-first 交互：实时执行轨迹、实时草稿、最终答案收敛
-- Site-aware 策略：针对 YouTube / GitHub / Google / Generic 的流程增强
-- 双层工具系统：
-  - `page.*`（DOM、交互、观测、提取）
-  - `browser.*`（tab、network、cookies、downloads、DNR、watcher）
-- 安全策略：Mutation / High-risk 双策略 + 可选自动审批
-- 主动感知：Watcher 模式（定时/条件触发 + action 执行）
+<p align="center">
+  <img src="https://img.shields.io/badge/Manifest-MV3-0ea5e9" alt="MV3"/>
+  <img src="https://img.shields.io/badge/Runtime-Service%20Worker-0369a1" alt="Service Worker"/>
+  <img src="https://img.shields.io/badge/UI-Side%20Panel%20%2B%20Chat-0f766e" alt="UI"/>
+  <img src="https://img.shields.io/badge/Language-JavaScript-f59e0b" alt="JavaScript"/>
+  <img src="https://img.shields.io/badge/Status-Active-16a34a" alt="Status"/>
+</p>
 
-## Product UX
+## What Farito Is
 
-- 主入口：Side Panel（推荐）
-- 头部能力：`New Chat`、`Auto Approve`、`Options`
-- 会话管理：支持新建会话、切换会话、删除/清空当前会话（持久化）
-- 调试透明：执行中可见 tool 调用、turn、阻塞/错误原因
+Farito is a Chrome MV3 browser-agent extension for:
+- reading deep page context (DOM, UI, text, runtime state)
+- executing controlled actions with policy/approval guardrails
+- running multi-step web workflows through a chat-first interface
 
-## Architecture
+## Why It Feels Different
 
-- `manifest.json`
-- `background.js`
-- `core/`
-  - `agent-loop.js`
-  - `tool-executor.js`
-  - `policy-guard.js`
-  - `approval-manager.js`
-  - `tab-api.js`
-  - `browser-tools/`
-  - `watcher-*.js`
-  - `constants.js` / `storage.js` / `shared-utils.js`
-- `content/`
-  - `entry.js`
-  - `page-bridge.js`
-  - `tools/`
-  - `observability.js`
-  - `scriptlet-engine.js`
-- `providers/`
-- `strategies/`
-- `popup.*` / `sidepanel.*` / `options.*`
+- **Page-native perception**: directly operates where users already browse/log in
+- **Tool transparency**: live tool-call timeline + debug trace
+- **Approval controls**: auto/manual policy, inline Allow/Reject flow in chat
+- **Watcher mode**: proactive monitoring + trigger-based actions
 
-## Capabilities
+## Tech Stack / Tags
+
+- **Platform**: Chrome Extension Manifest V3
+- **Background**: Service Worker + alarms + tabs events
+- **Content Runtime**: DOM tools, observability hooks, scriptlets, websocket tap
+- **Agent Runtime**: tool-calling loop, site strategy layer, policy guard, retries
+- **Providers**: OpenAI-compatible, Anthropic-compatible, Zhipu-compatible, Z.AI Coding
+- **Storage**: `chrome.storage.local` for settings, sessions, watcher state
+
+## Core Capabilities
 
 ### Page Tools (`page.*`)
-
-- Snapshot & Context: `get_snapshot`, `get_html`, `get_text`, `get_page_context`
-- Actions: `click`, `type`, `select`, `check`, `uncheck`, `scroll`, `keypress`, `wait_for`
-- Extraction: `query_elements`, `extract`, `highlight`, `get_element_html`, `get_styles`
-- Runtime: `eval_js`, `list_scriptlets`, `run_scriptlet`
-- Observability: `get_network_log`, `get_console_log`, `watch_dom`, `get_performance`, `tap_websocket`
+- inspect/snapshot/context (`get_snapshot`, `get_page_context`, `get_html`, `get_text`)
+- interaction (`click`, `type`, `select`, `scroll`, `keypress`, `wait_for`)
+- extraction (`query_elements`, `extract`, `highlight`, `get_element_html`, `get_styles`)
+- runtime and observability (`eval_js`, `watch_dom`, `get_network_log`, `get_console_log`, `get_performance`)
 
 ### Browser Tools (`browser.*`)
+- tabs/navigation (`open_url`, `switch_tab`, `reload_tab`, `navigate_back`, `navigate_forward`)
+- network/cookies/downloads (`http_request`, `get_cookies`, `download*`, `dnr_*`)
+- proactive automation (`watcher_create`, `watcher_list`, `watcher_pause`, `watcher_resume`, `watcher_remove`)
 
-- Tabs & Navigation: `open_url`, `switch_tab`, `reload_tab`, `navigate_back`, `navigate_forward`, `close_tab`
-- Data & Network: `http_request`, `http_history_*`, `get_cookies`, `set_cookie`, `delete_cookie`
-- Downloads & Rules: `download*`, `dnr_*`
-- Watchers: `watcher_create`, `watcher_list`, `watcher_pause`, `watcher_resume`, `watcher_remove`
+## UX Snapshot
 
-## Providers
-
-- OpenAI-compatible
-- Anthropic-compatible
-- Zhipu-compatible
-- Z.AI Coding (Global / CN)
-- Local heuristic fallback
+- Chat-first side panel
+- Real-time draft output while the agent is thinking
+- Session management (new/switch/delete/clear)
+- Inline approval actions (Allow / Reject)
+- One-click Auto Approve toggle
 
 ## Install
 
-1. 打开 `chrome://extensions`
-2. 开启开发者模式
-3. 点击“加载已解压的扩展程序”
-4. 选择项目目录
+1. Open `chrome://extensions`
+2. Enable Developer mode
+3. Click **Load unpacked**
+4. Select this project folder
 
-## Configuration
-
-在 `Options` 中配置：
-- Provider / Base URL / API Key / Model
-- Response Format / Reasoning Effort / Temperature
-- Max Turns / Max Snapshot Chars
-- Mutation Policy / High-Risk Policy
-
-## Notes
-
-- `wait_for` 已支持自动重试（超时后自动延长一次）
-- 审批动作已并入聊天流（直接 `Allow / Reject`）
-- 可开启 `Auto Approve` 以减少中断
-
-## Repository
+## Repo
 
 - GitHub: [https://github.com/tianrking/Farito](https://github.com/tianrking/Farito)
 
 ## License
 
-- Source-available license（见 `LICENSE`）
-- 商业授权说明见 `LICENSE-COMMERCIAL.md`
+- Source-available: see `LICENSE`
+- Commercial terms: see `LICENSE-COMMERCIAL.md`
