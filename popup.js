@@ -5,6 +5,7 @@ const traceEl = document.getElementById('trace');
 const statusEl = document.getElementById('status');
 const openOptionsBtn = document.getElementById('openOptions');
 const approvalsEl = document.getElementById('approvals');
+const approvalsPanelEl = document.querySelector('.approvals-panel');
 const chatFeedEl = document.getElementById('chatFeed');
 const stateModeEl = document.getElementById('stateMode');
 const stateStrategyEl = document.getElementById('stateStrategy');
@@ -14,6 +15,7 @@ const approvalSummaryEl = document.getElementById('approvalSummary');
 let activeRunId = '';
 let activeTypingNode = null;
 let liveDraftLines = [];
+let approvalCountdownTimer = null;
 
 function setStatus(text) {
   if (statusEl) statusEl.textContent = truncateText(text, 28);
@@ -98,6 +100,50 @@ function appendTraceLine(line) {
   const next = `${nowLabel()}  ${line}`;
   traceEl.textContent = traceEl.textContent ? `${traceEl.textContent}\n${next}` : next;
   traceEl.scrollTop = traceEl.scrollHeight;
+}
+
+function clearApprovalCountdown() {
+  if (!approvalCountdownTimer) return;
+  clearInterval(approvalCountdownTimer);
+  approvalCountdownTimer = null;
+}
+
+function findEarliestApprovalDeadline(items) {
+  const deadlines = (items || [])
+    .map((item) => {
+      const created = new Date(item.createdAt || 0).getTime();
+      const timeout = Number(item.timeoutMs) || 0;
+      if (!created || !timeout) return 0;
+      return created + timeout;
+    })
+    .filter(Boolean);
+  if (!deadlines.length) return 0;
+  return Math.min(...deadlines);
+}
+
+function formatRemainMs(ms) {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+  const ss = String(totalSec % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
+function refreshApprovalCountdown(items) {
+  const deadline = findEarliestApprovalDeadline(items);
+  if (!deadline) {
+    clearApprovalCountdown();
+    if (!activeRunId) setStatus('Idle');
+    return;
+  }
+
+  const update = () => {
+    const remain = deadline - Date.now();
+    setStatus(`Waiting approval ${formatRemainMs(remain)}`);
+    if (remain <= 0) clearApprovalCountdown();
+  };
+  update();
+  clearApprovalCountdown();
+  approvalCountdownTimer = setInterval(update, 1000);
 }
 
 function setTypingProgress(text, live = '') {
@@ -320,6 +366,10 @@ function renderApprovals(items) {
   if (approvalSummaryEl) {
     approvalSummaryEl.textContent = `Action Approval (${items.length})`;
   }
+  if (approvalsPanelEl && items.length > 0) {
+    approvalsPanelEl.open = true;
+  }
+  refreshApprovalCountdown(items);
   if (!approvalsEl) return;
   approvalsEl.innerHTML = '';
   if (!items.length) {

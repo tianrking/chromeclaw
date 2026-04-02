@@ -27,7 +27,7 @@ export function listPendingApprovals() {
   }));
 }
 
-export function requestApproval(payload, timeoutMs = 120000) {
+export function requestApproval(payload, timeoutMs = 300000) {
   const id = `ap-${Date.now()}-${++seq}`;
 
   return new Promise((resolve) => {
